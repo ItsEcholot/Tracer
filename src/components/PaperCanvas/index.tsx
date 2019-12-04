@@ -21,6 +21,22 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
     if (this.canvasRef.current) {
       this.paper.setup(this.canvasRef.current);
       this.paper.view.viewSize = this.props.size;
+      this.paper.view.autoUpdate = false;
+
+      const context = this.canvasRef.current.getContext('2d');
+      if (context) {
+        context.beginPath();
+        context.arc(100, 75, 30, 0, 2 * Math.PI);
+        context.stroke();
+      }
+
+      const raster = new this.paper.Raster(this.canvasRef.current.toDataURL());
+      raster.position = this.paper.view.center;
+
+      const point = new Paper.Point(10, 10);
+      const circle = new this.paper.Path.Circle(point, 10);
+      circle.strokeColor = new Paper.Color(0, 0, 0);
+      setTimeout(() => this.paper.view.update(), 1000);
     }
   }
 

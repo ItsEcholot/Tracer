@@ -6,7 +6,7 @@ class App extends React.PureComponent<{}, {}> {
   public render(): React.ReactNode {
     return (
       <div className="App">
-        <PaperCanvas size={new Paper.Size(100, 100)} />
+        <PaperCanvas size={new Paper.Size(800, 800)} />
       </div>
     );
   }
