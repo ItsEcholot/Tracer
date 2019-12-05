@@ -25,7 +25,7 @@ class App extends React.PureComponent<{}, AppState> {
   public render(): React.ReactNode {
     return (
       <div className="App">
-        <PaperCanvas width={this.state.width} height={this.state.height} renderHeight={this.state.renderHeight} renderWidth={this.state.renderWidth}/>
+        <PaperCanvas width={this.state.width} height={this.state.height} contentHeight={this.state.renderHeight} contentWidth={this.state.renderWidth}/>
         <DrawCanvas />
       </div>
     );

@@ -5,8 +5,8 @@ import styles from './styles.module.css';
 interface NoteCanvasProps {
   width: number;
   height: number;
-  renderWidth: number;
-  renderHeight: number;
+  contentWidth: number;
+  contentHeight: number;
 }
 
 class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
@@ -22,11 +22,11 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
   }
 
   public componentDidUpdate(prevProps: NoteCanvasProps) {
-    if (prevProps.renderHeight !== this.props.renderHeight || prevProps.renderWidth !== this.props.renderWidth) {
-      console.log(`${this.props.renderWidth / prevProps.renderWidth} - ${this.props.renderHeight / prevProps.renderHeight}`);
+    if (prevProps.contentHeight !== this.props.contentHeight || prevProps.contentWidth !== this.props.contentWidth) {
+      console.log(`${this.props.contentWidth / prevProps.contentWidth} - ${this.props.contentHeight / prevProps.contentHeight}`);
       this.paper.view.scale(
-        this.props.renderWidth / prevProps.renderWidth,
-        this.props.renderHeight / prevProps.renderHeight,
+        this.props.contentWidth / prevProps.contentWidth,
+        this.props.contentHeight / prevProps.contentHeight,
         new Paper.Point(0, 0)
       );
     }
