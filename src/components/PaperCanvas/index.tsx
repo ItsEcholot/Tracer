@@ -21,11 +21,8 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
     }
   }
 
-  public componentDidUpdate(prevProps: NoteCanvasProps) {
+  public componentDidUpdate(prevProps: NoteCanvasProps): void {
     if (prevProps.contentHeight !== this.props.contentHeight || prevProps.contentWidth !== this.props.contentWidth) {
-      console.log(
-        `${this.props.contentWidth / prevProps.contentWidth} - ${this.props.contentHeight / prevProps.contentHeight}`,
-      );
       this.paper.view.scale(
         this.props.contentWidth / prevProps.contentWidth,
         this.props.contentHeight / prevProps.contentHeight,
