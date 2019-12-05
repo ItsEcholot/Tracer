@@ -3,40 +3,35 @@ import Paper from 'paper';
 import styles from './styles.module.css';
 
 interface NoteCanvasProps {
-  size: Paper.Size;
+  width: number;
+  height: number;
+  renderWidth: number;
+  renderHeight: number;
 }
 
 class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
-  private canvasRef: React.RefObject<HTMLCanvasElement>;
-
-  private paper: Paper.PaperScope = new Paper.PaperScope();
-
-  constructor(props: NoteCanvasProps) {
-    super(props);
-    this.canvasRef = React.createRef<HTMLCanvasElement>();
-  }
+  private canvasRef = React.createRef<HTMLCanvasElement>();
+  private paper = new Paper.PaperScope();
 
   public componentDidMount(): void {
     this.paper.activate();
     if (this.canvasRef.current) {
       this.paper.setup(this.canvasRef.current);
-      this.paper.view.viewSize = this.props.size;
-      this.paper.view.autoUpdate = false;
+      this.paper.view.viewSize = new Paper.Size(this.props.width, this.props.height);
+    }
+  }
 
-      const context = this.canvasRef.current.getContext('2d');
-      if (context) {
-        context.beginPath();
-        context.arc(100, 75, 30, 0, 2 * Math.PI);
-        context.stroke();
-      }
-
-      const raster = new this.paper.Raster(this.canvasRef.current.toDataURL());
-      raster.position = this.paper.view.center;
-
-      const point = new Paper.Point(10, 10);
-      const circle = new this.paper.Path.Circle(point, 10);
-      circle.strokeColor = new Paper.Color(0, 0, 0);
-      setTimeout(() => this.paper.view.update(), 1000);
+  public componentDidUpdate(prevProps: NoteCanvasProps) {
+    if (prevProps.renderHeight !== this.props.renderHeight || prevProps.renderWidth !== this.props.renderWidth) {
+      console.log(`${this.props.renderWidth / prevProps.renderWidth} - ${this.props.renderHeight / prevProps.renderHeight}`);
+      this.paper.view.scale(
+        this.props.renderWidth / prevProps.renderWidth,
+        this.props.renderHeight / prevProps.renderHeight,
+        new Paper.Point(0, 0)
+      );
+    }
+    if (prevProps.height !== this.props.height || prevProps.width !== this.props.width) {
+      this.paper.view.viewSize = new Paper.Size(this.props.width, this.props.height);
     }
   }
 
