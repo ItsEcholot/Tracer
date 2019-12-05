@@ -1,8 +1,6 @@
 import React from 'react';
-import Paper from 'paper';
 import PaperCanvas from './components/PaperCanvas';
 import DrawCanvas from './components/DrawCanvas';
-import { thisExpression } from '@babel/types';
 
 interface AppState {
   width: number;
@@ -19,14 +17,19 @@ class App extends React.PureComponent<{}, AppState> {
       height: 800,
       renderWidth: 800,
       renderHeight: 800,
-    }
+    };
   }
 
   public render(): React.ReactNode {
     return (
       <div className="App">
-        <PaperCanvas width={this.state.width} height={this.state.height} contentHeight={this.state.renderHeight} contentWidth={this.state.renderWidth}/>
-        <DrawCanvas />
+        <PaperCanvas
+          width={this.state.width}
+          height={this.state.height}
+          contentHeight={this.state.renderHeight}
+          contentWidth={this.state.renderWidth}
+        />
+        <DrawCanvas width={this.state.width / 2} height={this.state.height / 2} />
       </div>
     );
   }

@@ -23,11 +23,13 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
 
   public componentDidUpdate(prevProps: NoteCanvasProps) {
     if (prevProps.contentHeight !== this.props.contentHeight || prevProps.contentWidth !== this.props.contentWidth) {
-      console.log(`${this.props.contentWidth / prevProps.contentWidth} - ${this.props.contentHeight / prevProps.contentHeight}`);
+      console.log(
+        `${this.props.contentWidth / prevProps.contentWidth} - ${this.props.contentHeight / prevProps.contentHeight}`,
+      );
       this.paper.view.scale(
         this.props.contentWidth / prevProps.contentWidth,
         this.props.contentHeight / prevProps.contentHeight,
-        new Paper.Point(0, 0)
+        new Paper.Point(0, 0),
       );
     }
     if (prevProps.height !== this.props.height || prevProps.width !== this.props.width) {

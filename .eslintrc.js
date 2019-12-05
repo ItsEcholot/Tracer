@@ -47,6 +47,7 @@ module.exports = {
     'class-methods-use-this': ['off'],
     'no-console': ['error', { 'allow': ['warn', 'error'] }],
     'no-underscore-dangle': ['error', { 'allow': ['_id' ] }],
+    'lines-between-class-members': ['off'],
   },
   settings: {
     react: {
