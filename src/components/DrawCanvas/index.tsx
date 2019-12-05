@@ -15,6 +15,7 @@ class DrawCanvas extends React.PureComponent<DrawCanvasProps, DrawCanvasState> {
   private canvasContext: CanvasRenderingContext2D | undefined | null;
   private lastPosX = 0;
   private lastPosY = 0;
+  private lastTouchForce = 0;
 
   constructor(props: DrawCanvasProps) {
     super(props);
@@ -49,6 +50,7 @@ class DrawCanvas extends React.PureComponent<DrawCanvasProps, DrawCanvasState> {
 
   private onTouchStart(event: React.TouchEvent<HTMLCanvasElement>): void {
     if (!this.state.drawing) {
+      this.lastTouchForce = (event.targetTouches.item(0) as any).force;
       this.updateLastPosTouch(event);
       this.startDrawing();
     }
@@ -67,11 +69,14 @@ class DrawCanvas extends React.PureComponent<DrawCanvasProps, DrawCanvasState> {
   }
 
   private onMouseMove(event: React.MouseEvent<HTMLCanvasElement, MouseEvent>): void {
-    this.draw(event.clientX, event.clientY, event.target);
+    if (event.buttons === 1) {
+      this.draw(event.clientX, event.clientY, event.target);
+    }
   }
 
   private onTouchMove(event: React.TouchEvent<HTMLCanvasElement>): void {
     const touch = event.targetTouches.item(0);
+    this.lastTouchForce = (touch as any).force;
     this.draw(touch.clientX, touch.clientY, event.target);
   }
 
@@ -90,7 +95,7 @@ class DrawCanvas extends React.PureComponent<DrawCanvasProps, DrawCanvasState> {
   private draw(x: number, y: number, target: EventTarget): void {
     if (this.state.drawing && this.canvasContext) {
       this.canvasContext.beginPath();
-      this.canvasContext.lineWidth = 3;
+      this.canvasContext.lineWidth = 4; // this.lastTouchForce ? this.lastTouchForce * 10 : 4;
       this.canvasContext.lineCap = 'round';
       this.canvasContext.strokeStyle = '#000000';
 
@@ -98,6 +103,21 @@ class DrawCanvas extends React.PureComponent<DrawCanvasProps, DrawCanvasState> {
       this.updateLastPos(x, y, target);
       this.canvasContext.lineTo(this.lastPosX, this.lastPosY);
       this.canvasContext.stroke();
+    }
+  }
+
+  private drawStartingDot(): void {
+    if (this.canvasContext) {
+      this.canvasContext.beginPath();
+      this.canvasContext.fillStyle = '#000000';
+      this.canvasContext.arc(
+        this.lastPosX,
+        this.lastPosY,
+        2, // this.lastTouchForce ? this.lastTouchForce * 1.5 : 1.5,
+        0,
+        2 * Math.PI,
+      );
+      this.canvasContext.fill();
     }
   }
 
@@ -109,8 +129,8 @@ class DrawCanvas extends React.PureComponent<DrawCanvasProps, DrawCanvasState> {
 
   private updateLastPosTouch(event: React.TouchEvent<HTMLCanvasElement>): void {
     const relPos = this.calculateRelativePos(
-      event.touches.item(0).clientX,
-      event.touches.item(0).clientY,
+      event.targetTouches.item(0).clientX,
+      event.targetTouches.item(0).clientY,
       event.target,
     );
     this.lastPosX = relPos.x;
@@ -127,6 +147,7 @@ class DrawCanvas extends React.PureComponent<DrawCanvasProps, DrawCanvasState> {
 
   private startDrawing(): void {
     this.setState({ drawing: true });
+    this.drawStartingDot();
   }
 
   private stopDrawing(): void {
