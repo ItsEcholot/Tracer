@@ -12,12 +12,17 @@ interface NoteCanvasProps {
 class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
   private canvasRef = React.createRef<HTMLCanvasElement>();
   private paper = new Paper.PaperScope();
+  private currentPath: Paper.Path | undefined;
 
   public componentDidMount(): void {
     this.paper.activate();
     if (this.canvasRef.current) {
       this.paper.setup(this.canvasRef.current);
       this.paper.view.viewSize = new Paper.Size(this.props.width, this.props.height);
+
+      this.paper.view.onMouseDown = this.onMouseDown.bind(this);
+      this.paper.view.onMouseDrag = this.onMouseDrag.bind(this);
+      this.paper.view.onMouseUp = this.onMouseUp.bind(this);
     }
   }
 
@@ -31,6 +36,27 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
     }
     if (prevProps.height !== this.props.height || prevProps.width !== this.props.width) {
       this.paper.view.viewSize = new Paper.Size(this.props.width, this.props.height);
+    }
+  }
+
+  private onMouseDown(event: Paper.MouseEvent): void {
+    this.currentPath = new this.paper.Path({
+      segments: [event.point],
+      strokeColor: '#000000',
+      strokeWidth: 3,
+      strokeCap: 'round',
+    });
+  }
+
+  private onMouseDrag(event: Paper.MouseEvent): void {
+    if (this.currentPath && event.point) {
+      this.currentPath.add(event.point);
+    }
+  }
+
+  private onMouseUp(event: Paper.MouseEvent): void {
+    if (this.currentPath) {
+      this.currentPath.simplify(0);
     }
   }
 
