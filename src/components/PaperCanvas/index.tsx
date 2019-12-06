@@ -1,7 +1,8 @@
 import React from 'react';
 import Paper from 'paper';
-import PaperJsOffset from 'paperjs-offset';
 import styles from './styles.module.css';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Potrace = require('../../../node_modules/potrace-js/src');
 
 interface NoteCanvasProps {
   width: number;
@@ -23,7 +24,6 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
   private currentForces: DistanceForces[] = [];
 
   public componentDidMount(): void {
-    PaperJsOffset(this.paper);
     this.paper.activate();
     if (this.canvasRef.current) {
       this.paper.setup(this.canvasRef.current);
@@ -84,10 +84,11 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
     if (this.currentPath) {
       this.currentPath.simplify(1);
 
-      let path = this.currentPath;
-      const paths = [path];
-      let newPath;
       if (this.supportsForce) {
+        let path = this.currentPath;
+        const paths = [path];
+        let newPath;
+
         this.currentForces.forEach((distanceForce, index) => {
           if (distanceForce.distance >= 20 && this.currentForces[index - 1]) {
             const forceSteps =
@@ -110,6 +111,30 @@ class PaperCanvas extends React.PureComponent<NoteCanvasProps, {}> {
         }
 
         const group = new this.paper.Group(paths);
+        const raster = group.rasterize(this.paper.view.resolution, false);
+      } else {
+        const raster = this.currentPath.rasterize(this.paper.view.resolution, false);
+        if (raster.width && raster.height) {
+          const canvas = raster.getSubCanvas(new Paper.Rectangle(0, 0, raster.width, raster.height));
+          const bgCanvas = document.createElement('canvas');
+          bgCanvas.width = canvas.width;
+          bgCanvas.height = canvas.height;
+          const bgCanvasContext = bgCanvas.getContext('2d');
+          if (bgCanvasContext) {
+            bgCanvasContext.fillStyle = '#ffffff';
+            bgCanvasContext.fillRect(0, 0, raster.width, raster.height);
+            bgCanvasContext.drawImage(canvas, 0, 0);
+            const svg: string = Potrace.getSVG(Potrace.traceCanvas(bgCanvas), 1);
+            if (this.paper.project) {
+              const newPath = this.paper.project.importSVG(svg);
+              newPath.position = this.currentPath.position;
+            }
+
+            canvas.remove();
+            raster.remove();
+            this.currentPath.remove();
+          }
+        }
       }
     }
   }
