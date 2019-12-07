@@ -1,6 +1,5 @@
 import React from 'react';
 import PaperCanvas from './components/PaperCanvas';
-import DrawCanvas from './components/DrawCanvas';
 
 interface AppState {
   width: number;
@@ -29,13 +28,6 @@ class App extends React.PureComponent<{}, AppState> {
           contentHeight={this.state.renderHeight}
           contentWidth={this.state.renderWidth}
         />
-        <PaperCanvas
-          width={this.state.width}
-          height={this.state.height}
-          contentHeight={this.state.renderHeight}
-          contentWidth={this.state.renderWidth}
-        />
-        <DrawCanvas width={this.state.width} height={this.state.height} />
       </div>
     );
   }
