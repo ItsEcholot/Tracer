@@ -89,7 +89,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       const circle = new Konva.Circle({
         x: 0,
         y: 0,
-        radius: 400,
+        radius: 100,
         fill: 'black',
       });
       this.layers.main.add(circle);
@@ -109,6 +109,9 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       stroke: this.state.strokeColor,
       strokeWidth: this.state.strokeWidth,
       points: [pointerPos.x, pointerPos.y],
+      lineCap: 'round',
+      lineJoin: 'round',
+      tension: 0.4,
     });
     this.layers.main.add(this.currentLine);
   }
