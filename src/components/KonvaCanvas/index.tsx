@@ -61,11 +61,24 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     this.stopDrawing();
   }
 
-  private onTouchMove(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
+  private onTouchMove(): void {
     if (!this.drawing || !this.stage) {
       return;
     }
     this.draw();
+  }
+
+  private getStagePointerPosition(): Konva.Vector2d | undefined {
+    if (!this.stage) return;
+    const pointerPos = this.stage.getPointerPosition();
+    if (!pointerPos) return;
+    const stageAbsolutePos = this.stage.getAbsolutePosition();
+    stageAbsolutePos.x *= -1;
+    stageAbsolutePos.y *= -1;
+
+    pointerPos.x += stageAbsolutePos.x;
+    pointerPos.y += stageAbsolutePos.y;
+    return pointerPos;
   }
 
   private setupKonva(): void {
@@ -100,7 +113,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   private startDrawing(): void {
     if (!this.stage) return;
     this.stage.draggable(false);
-    const pointerPos = this.stage.getPointerPosition();
+    const pointerPos = this.getStagePointerPosition();
     if (!pointerPos) return;
 
     this.drawing = true;
@@ -118,13 +131,22 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private stopDrawing(): void {
     if (!this.stage) return;
+    // Draw additional point where touch ended (for dots especially)
+    if (this.clientCapabilities.pen) {
+      if (!this.currentLine) return;
+      const pointerPos = this.getStagePointerPosition();
+      if (!pointerPos) return;
+      this.currentLine.points([...this.currentLine.points(), pointerPos.x, pointerPos.y]);
+      this.currentLine.draw();
+    }
+
     this.stage.draggable(true);
     this.drawing = false;
   }
 
   private draw(): void {
     if (!this.stage || !this.currentLine) return;
-    const pointerPos = this.stage.getPointerPosition();
+    const pointerPos = this.getStagePointerPosition();
     if (!pointerPos) return;
     const oldPoints = this.currentLine.points();
     this.currentLine.points([...oldPoints, pointerPos.x, pointerPos.y]);
