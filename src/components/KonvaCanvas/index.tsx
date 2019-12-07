@@ -51,9 +51,10 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   private onTouchStart(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
     this.updateClientCapabilities(event.evt);
     if (this.clientCapabilities.pen) {
+      this.stopTransform();
       this.startDrawing();
     } else {
-      console.dir(event.target);
+      this.startTransform(event.target);
     }
   }
 
@@ -104,6 +105,8 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         y: 0,
         radius: 100,
         fill: 'black',
+        draggable: true,
+        name: 'userContent',
       });
       this.layers.main.add(circle);
       this.layers.main.batchDraw();
@@ -112,6 +115,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private startDrawing(): void {
     if (!this.stage) return;
+    this.layers.main.getChildren().each(node => node.draggable(false));
     this.stage.draggable(false);
     const pointerPos = this.getStagePointerPosition();
     if (!pointerPos) return;
@@ -125,8 +129,37 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       lineCap: 'round',
       lineJoin: 'round',
       tension: 0.4,
+      draggable: true,
+      name: 'userContent',
     });
     this.layers.main.add(this.currentLine);
+  }
+
+  private startTransform(target: Konva.Shape | Konva.Stage): void {
+    if (target === this.stage) {
+      this.stopTransform();
+      return;
+    }
+    if (!target.hasName('userContent')) {
+      return;
+    }
+
+    if (!this.stage) return;
+    (this.stage.find('Transformer') as any).destroy();
+    const transformer = new Konva.Transformer({
+      rotationSnaps: [0, 45, 90, 135, 180, 225, 270],
+      padding: 10,
+      anchorSize: 20,
+    });
+    this.layers.main.add(transformer);
+    transformer.attachTo(target);
+    this.layers.main.draw();
+  }
+
+  private stopTransform(): void {
+    if (!this.stage) return;
+    (this.stage.find('Transformer') as any).destroy();
+    this.layers.main.draw();
   }
 
   private stopDrawing(): void {
@@ -140,6 +173,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       this.currentLine.draw();
     }
 
+    this.layers.main.getChildren().each(node => node.draggable(true));
     this.stage.draggable(true);
     this.drawing = false;
   }
