@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <script type="application/javascript">
+    function draw() {
+      var canvas = document.getElementById('canvas');
+      if (canvas.getContext) {
+        var ctx = canvas.getContext('2d');
+        const point1 = { x: 200, y: 500 };
+        const point2 = { x: 800, y: 300 };
+
+        ctx.beginPath();
+        ctx.moveTo(point1.x, point1.y);
+        ctx.lineTo(point2.x, point2.y);
+        ctx.stroke();
+
+        const deltaX = Math.abs(point1.x - point2.x);
+        const deltaY = Math.abs(point1.y - point2.y);
+
+        const midpointX = (point1.x + point2.x) / 2;
+        const midpointY = (point1.y + point2.y) / 2;
+        const slope = (point2.y - point1.y) / (point2.x - point1.x);
+        console.log('slope ' + slope);
+        const reciprocalSlope = -1 * Math.pow(slope, -1);
+        console.log('reciprocalSlope ' + reciprocalSlope);
+        const yIntercept = midpointY - (reciprocalSlope * midpointX);
+        console.log('yIntercept ' + yIntercept);
+        const y = (x) => {
+          return reciprocalSlope * x + yIntercept;
+        }
+        const offset = 50;
+
+        ctx.beginPath();
+        ctx.arc(midpointX + offset, y(midpointX + offset), 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(midpointX - offset, y(midpointX - offset), 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+  </script>
+</head>
+
+<body onload="draw();">
+  <canvas id="canvas" width="800" height="8000"></canvas>
+</body>
+
+</html>

@@ -21,6 +21,7 @@ export default class DrawService {
       lineJoin: 'round',
       tension: 0.4,
       name: 'userContent',
+      // hitStrokeWidth
     });
     layers.main.add(line);
     line.draw();

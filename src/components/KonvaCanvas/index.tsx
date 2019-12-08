@@ -5,6 +5,8 @@ import ClientCapabilities from '../../types/ClientCapabilities';
 import TransformService from '../../services/Transform';
 import styles from './styles.module.css';
 import DrawService from '../../services/Draw';
+import ForceList from '../../types/ForceList';
+import PointerService from '../../services/Pointer';
 
 interface KonvaCanvasProps {
   width: number;
@@ -27,11 +29,12 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   };
   private drawing = false;
   private currentLine: Konva.Line | undefined;
+  private currentForces: ForceList[] = [];
 
   constructor(props: KonvaCanvasProps) {
     super(props);
     this.state = {
-      debug: '-',
+      debug: 0,
       strokeColor: '#000000',
       strokeWidth: 4,
     };
@@ -59,20 +62,62 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         this.state.strokeColor,
         this.state.strokeWidth,
       );
+
+      // Force
+      /* if (this.clientCapabilities.force && window.TouchEvent && event.evt instanceof TouchEvent) {
+        this.currentForces = [];
+      } */
     } else {
       TransformService.startTransform(event.target, this.stage, this.layers);
     }
   }
 
-  private onTouchEnd(): void {
-    if (!this.currentLine || !this.stage) return;
+  private onTouchEnd(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
+    if (!this.currentLine || !this.stage || !this.drawing) return;
     DrawService.stopDrawing(this.currentLine, this.stage, this.clientCapabilities);
     this.drawing = false;
+
+    // Force
+    /* if (!this.clientCapabilities.force || !this.clientCapabilities.pen) return;
+    const group = new Konva.Group({
+      name: 'userContent',
+    });
+    for (let i = 0; i < this.currentForces.length; i += 1) {
+      const points = this.currentLine.points();
+      const newLinePoints = points.splice(0, 2);
+      this.currentLine.points(points);
+      const calculatedStrokeWidth = this.currentForces[i].force * this.state.strokeWidth;
+
+      const newLine = new Konva.Line({
+        stroke: this.state.strokeColor,
+        strokeWidth: calculatedStrokeWidth,
+        points: [...newLinePoints, points[0], points[1]],
+        lineCap: 'round',
+        lineJoin: 'round',
+        listening: false,
+      });
+      group.add(newLine);
+    }
+    if (group.children.length > 0) {
+      this.currentLine.destroy();
+      this.layers.main.add(group);
+      group.cache();
+      this.layers.main.batchDraw();
+    } */
   }
 
-  private onTouchMove(): void {
+  private onTouchMove(event: Konva.KonvaEventObject<TouchEvent>): void {
     if (!this.drawing || !this.stage || !this.currentLine) return;
-    DrawService.draw(this.currentLine, this.stage);
+    // DrawService.draw(this.currentLine, this.stage);
+
+    // Force
+    /* if (!this.clientCapabilities.force) return;
+    this.currentForces.push({
+      distance: 0,
+      force: Math.max(event.evt.targetTouches[0].force, 0.2),
+    }); */
+
+    // Forcev2
   }
 
   private setupKonva(): void {
@@ -92,6 +137,9 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
       this.stage.on('mouseup touchend', this.onTouchEnd.bind(this));
       this.stage.on('mousemove touchmove', this.onTouchMove.bind(this));
+      document.addEventListener('touchcancel', event => {
+        this.onTouchEnd({ evt: event } as any);
+      });
 
       const circle = new Konva.Circle({
         x: 0,
@@ -117,8 +165,8 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     if (window.TouchEvent && event instanceof TouchEvent) {
       if (event.targetTouches[0].force) {
         this.clientCapabilities.force = true;
+        this.clientCapabilities.pen = event.targetTouches[0].rotationAngle !== 0 || event.targetTouches[0].force < 1.0;
       }
-      this.clientCapabilities.pen = event.targetTouches[0].rotationAngle !== 0;
     }
   }
 
