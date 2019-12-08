@@ -1,6 +1,10 @@
 import React, { ReactNode } from 'react';
 import Konva from 'konva';
+import LayerList from '../../types/LayerList';
+import ClientCapabilities from '../../types/ClientCapabilities';
+import TransformService from '../../services/Transform';
 import styles from './styles.module.css';
+import DrawService from '../../services/Draw';
 
 interface KonvaCanvasProps {
   width: number;
@@ -13,15 +17,10 @@ interface KonvaCanvasState {
   strokeWidth: number;
 }
 
-interface ClientCapabilities {
-  force: boolean;
-  pen: boolean;
-}
-
 class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState> {
   private containerRef = React.createRef<HTMLDivElement>();
   private stage: Konva.Stage | undefined;
-  private layers: { [key: string]: Konva.Layer } = {};
+  private layers: LayerList = {};
   private clientCapabilities: ClientCapabilities = {
     force: false,
     pen: false,
@@ -50,36 +49,30 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private onTouchStart(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
     this.updateClientCapabilities(event.evt);
+    if (!this.stage) return;
     if (this.clientCapabilities.pen) {
-      this.stopTransform(event.target);
-      this.startDrawing();
+      TransformService.stopTransform(this.stage, this.layers);
+      this.drawing = true;
+      this.currentLine = DrawService.startDrawing(
+        this.stage,
+        this.layers,
+        this.state.strokeColor,
+        this.state.strokeWidth,
+      );
     } else {
-      this.startTransform(event.target);
+      TransformService.startTransform(event.target, this.stage, this.layers);
     }
   }
 
   private onTouchEnd(): void {
-    this.stopDrawing();
+    if (!this.currentLine || !this.stage) return;
+    DrawService.stopDrawing(this.currentLine, this.stage, this.clientCapabilities);
+    this.drawing = false;
   }
 
   private onTouchMove(): void {
-    if (!this.drawing || !this.stage) {
-      return;
-    }
-    this.draw();
-  }
-
-  private getStagePointerPosition(): Konva.Vector2d | undefined {
-    if (!this.stage) return;
-    const pointerPos = this.stage.getPointerPosition();
-    if (!pointerPos) return;
-    const stageAbsolutePos = this.stage.getAbsolutePosition();
-    stageAbsolutePos.x *= -1;
-    stageAbsolutePos.y *= -1;
-
-    pointerPos.x += stageAbsolutePos.x;
-    pointerPos.y += stageAbsolutePos.y;
-    return pointerPos;
+    if (!this.drawing || !this.stage || !this.currentLine) return;
+    DrawService.draw(this.currentLine, this.stage);
   }
 
   private setupKonva(): void {
@@ -118,82 +111,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       this.layers.main.add(circle2);
       this.layers.main.batchDraw();
     }
-  }
-
-  private startDrawing(): void {
-    if (!this.stage) return;
-    this.stage.draggable(false);
-    const pointerPos = this.getStagePointerPosition();
-    if (!pointerPos) return;
-
-    this.drawing = true;
-
-    this.currentLine = new Konva.Line({
-      stroke: this.state.strokeColor,
-      strokeWidth: this.state.strokeWidth,
-      points: [pointerPos.x, pointerPos.y],
-      lineCap: 'round',
-      lineJoin: 'round',
-      tension: 0.4,
-      name: 'userContent',
-    });
-    this.layers.main.add(this.currentLine);
-  }
-
-  private startTransform(target: Konva.Shape | Konva.Stage): void {
-    if (target === this.stage) {
-      this.stopTransform(target);
-      return;
-    }
-    if (!target.hasName('userContent')) {
-      return;
-    }
-
-    if (!this.stage) return;
-    (this.stage.find('Transformer') as any).destroy();
-    target.draggable(true);
-    const transformer = new Konva.Transformer({
-      rotationSnaps: [0, 45, 90, 135, 180, 225, 270],
-      padding: 10,
-      anchorSize: 20,
-    });
-    this.layers.main.add(transformer);
-    transformer.attachTo(target);
-    this.layers.main.draw();
-  }
-
-  private stopTransform(target: Konva.Shape | Konva.Stage): void {
-    if (!this.stage) return;
-    this.stage.find('Transformer').each((child: Konva.Node) => {
-      const transformer = child as Konva.Transformer;
-      transformer.getNode().draggable(false);
-      transformer.destroy();
-    });
-    this.layers.main.draw();
-  }
-
-  private stopDrawing(): void {
-    if (!this.stage) return;
-    // Draw additional point where touch ended (for dots especially)
-    if (this.clientCapabilities.pen) {
-      if (!this.currentLine) return;
-      const pointerPos = this.getStagePointerPosition();
-      if (!pointerPos) return;
-      this.currentLine.points([...this.currentLine.points(), pointerPos.x, pointerPos.y]);
-      this.currentLine.draw();
-    }
-
-    this.stage.draggable(true);
-    this.drawing = false;
-  }
-
-  private draw(): void {
-    if (!this.stage || !this.currentLine) return;
-    const pointerPos = this.getStagePointerPosition();
-    if (!pointerPos) return;
-    const oldPoints = this.currentLine.points();
-    this.currentLine.points([...oldPoints, pointerPos.x, pointerPos.y]);
-    this.currentLine.draw();
   }
 
   private updateClientCapabilities(event: MouseEvent | TouchEvent): void {
