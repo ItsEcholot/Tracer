@@ -108,6 +108,14 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         name: 'userContent',
       });
       this.layers.main.add(circle);
+      const circle2 = new Konva.Circle({
+        x: 500,
+        y: 500,
+        radius: 100,
+        fill: 'black',
+        name: 'userContent',
+      });
+      this.layers.main.add(circle2);
       this.layers.main.batchDraw();
     }
   }
@@ -156,10 +164,11 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private stopTransform(target: Konva.Shape | Konva.Stage): void {
     if (!this.stage) return;
-    if (target !== this.stage) {
-      target.draggable(false);
-    }
-    (this.stage.find('Transformer') as any).destroy();
+    this.stage.find('Transformer').each((child: Konva.Node) => {
+      const transformer = child as Konva.Transformer;
+      transformer.getNode().draggable(false);
+      transformer.destroy();
+    });
     this.layers.main.draw();
   }
 
