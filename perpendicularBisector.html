@@ -8,36 +8,59 @@
       var canvas = document.getElementById('canvas');
       if (canvas.getContext) {
         var ctx = canvas.getContext('2d');
-        const point1 = { x: 200, y: 500 };
-        const point2 = { x: 800, y: 300 };
+        const point1 = { x: 300, y: 500 };
+        const point2 = { x: 400, y: 200 };
+        const point3 = { x: 600, y: 10 };
+        const point4 = { x: 600, y: 500 };
 
         ctx.beginPath();
         ctx.moveTo(point1.x, point1.y);
         ctx.lineTo(point2.x, point2.y);
+        ctx.lineTo(point3.x, point3.y);
+        ctx.lineTo(point4.x, point4.y);
         ctx.stroke();
 
-        const deltaX = Math.abs(point1.x - point2.x);
-        const deltaY = Math.abs(point1.y - point2.y);
+        function calcOffsetPoints(pointA, pointB, offset, calcPoint) {
+          const dirVecX = pointB.x - pointA.x;
+          const dirVecY = pointB.y - pointA.y;
+          const norm = Math.sqrt(Math.pow(dirVecX, 2) + Math.pow(dirVecY, 2));
+          const streck = offset / norm;
+          const midpointX = (pointA.x + pointB.x) / 2;
+          const midpointY = (pointA.y + pointB.y) / 2;
 
-        const midpointX = (point1.x + point2.x) / 2;
-        const midpointY = (point1.y + point2.y) / 2;
-        const slope = (point2.y - point1.y) / (point2.x - point1.x);
-        console.log('slope ' + slope);
-        const reciprocalSlope = -1 * Math.pow(slope, -1);
-        console.log('reciprocalSlope ' + reciprocalSlope);
-        const yIntercept = midpointY - (reciprocalSlope * midpointX);
-        console.log('yIntercept ' + yIntercept);
-        const y = (x) => {
-          return reciprocalSlope * x + yIntercept;
+          return {
+            point1: {x: calcPoint.x + streck * (-dirVecY), y: calcPoint.y + streck * dirVecX},
+            point2: {x: calcPoint.x + streck * dirVecY, y: calcPoint.y + streck * (-dirVecX)},
+          };
         }
-        const offset = 50;
 
+        function calcOffsetPointsAverage(pointA, pointB, pointC, offset) {
+          const offsetPoint1 = calcOffsetPoints(pointA, pointB, offset, pointB);
+          const offsetPoint2 = calcOffsetPoints(pointC, pointB, offset, pointB);
+
+          return {
+            point1: {x: (offsetPoint1.point1.x + offsetPoint2.point2.x) / 2, y: (offsetPoint1.point1.y + offsetPoint2.point2.y) / 2},
+            point2: {x: (offsetPoint1.point2.x + offsetPoint2.point1.x) / 2, y: (offsetPoint1.point2.y + offsetPoint2.point1.y) / 2},
+          };
+        }
+
+        const startOffsetPoints = calcOffsetPoints(point1, point2, 5, point1);
+        const offsetPoints1 = calcOffsetPointsAverage(point1, point2, point3, 5);
+        const offsetPoints2 = calcOffsetPointsAverage(point2, point3, point4, 5);
+        const stopOffsetPoints = calcOffsetPoints(point3, point4, 5, point4);
+
+        ctx.strokeStyle = "#FF0000";
         ctx.beginPath();
-        ctx.arc(midpointX + offset, y(midpointX + offset), 5, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(midpointX - offset, y(midpointX - offset), 5, 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.moveTo(startOffsetPoints.point1.x, startOffsetPoints.point1.y);
+        ctx.lineTo(offsetPoints1.point1.x, offsetPoints1.point1.y);
+        ctx.lineTo(offsetPoints2.point1.x, offsetPoints2.point1.y);
+        ctx.lineTo(stopOffsetPoints.point1.x, stopOffsetPoints.point1.y);
+
+        ctx.moveTo(stopOffsetPoints.point2.x, stopOffsetPoints.point2.y);
+        ctx.lineTo(offsetPoints2.point2.x, offsetPoints2.point2.y);
+        ctx.lineTo(offsetPoints1.point2.x, offsetPoints1.point2.y);
+        ctx.lineTo(startOffsetPoints.point2.x, startOffsetPoints.point2.y);
+        ctx.stroke();
       }
     }
   </script>
