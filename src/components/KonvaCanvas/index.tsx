@@ -5,8 +5,6 @@ import ClientCapabilities from '../../types/ClientCapabilities';
 import TransformService from '../../services/Transform';
 import styles from './styles.module.css';
 import DrawService from '../../services/Draw';
-import ForceList from '../../types/ForceList';
-import PointerService from '../../services/Pointer';
 
 interface KonvaCanvasProps {
   width: number;
@@ -29,7 +27,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   };
   private drawing = false;
   private currentLine: Konva.Line | undefined;
-  private currentForces: ForceList[] = [];
 
   constructor(props: KonvaCanvasProps) {
     super(props);
@@ -76,6 +73,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     if (!this.currentLine || !this.stage || !this.drawing) return;
     DrawService.stopDrawing(this.currentLine, this.stage, this.clientCapabilities);
     this.drawing = false;
+    this.layers.main.batchDraw();
 
     // Force
     /* if (!this.clientCapabilities.force || !this.clientCapabilities.pen) return;
@@ -108,7 +106,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private onTouchMove(event: Konva.KonvaEventObject<TouchEvent>): void {
     if (!this.drawing || !this.stage || !this.currentLine) return;
-    // DrawService.draw(this.currentLine, this.stage);
+    DrawService.draw(this.currentLine, this.stage);
 
     // Force
     /* if (!this.clientCapabilities.force) return;
@@ -137,8 +135,14 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
       this.stage.on('mouseup touchend', this.onTouchEnd.bind(this));
       this.stage.on('mousemove touchmove', this.onTouchMove.bind(this));
-      document.addEventListener('touchcancel', event => {
+      this.containerRef.current.addEventListener('touchcancel', event => {
         this.onTouchEnd({ evt: event } as any);
+      });
+      this.containerRef.current.addEventListener('pointermove', event => {
+        if (this.stage) {
+          this.stage.setPointersPositions(event);
+        }
+        this.onTouchMove({ evt: event } as any);
       });
 
       const circle = new Konva.Circle({
