@@ -47,7 +47,8 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   public componentDidUpdate(prevProps: KonvaCanvasProps): void {
     if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
-      this.changeKonvaStageSize(this.props.width, this.props.height);
+      if (!this.stage) return;
+      TransformService.changeStageSize(this.stage, this.props.width, this.props.height);
     }
   }
 
@@ -105,7 +106,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         width: this.props.width,
         height: this.props.height,
         draggable: true,
-        dragBoundFunc: this.stageDragBoundFunc.bind(this),
+        dragBoundFunc: (pos): Konva.Vector2d => TransformService.stageDragBoundFunc(pos, this.stage as any),
       });
 
       this.layers.main = new Konva.Layer();
@@ -115,7 +116,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
       this.stage.on('mouseup touchend', this.onTouchEnd.bind(this));
       this.stage.on('mousemove touchmove', this.onTouchMove.bind(this));
-      this.containerRef.current.addEventListener('touchcancel', event => {
+      this.containerRef.current.addEventListener('touchcancel', () => {
         this.onTouchEnd();
       });
       this.containerRef.current.addEventListener('pointermove', event => {
@@ -151,21 +152,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         this.clientCapabilities.force = true;
         this.clientCapabilities.pen = event.targetTouches[0].rotationAngle !== 0 || event.targetTouches[0].force < 1.0;
       }
-    }
-  }
-
-  private stageDragBoundFunc(pos: Konva.Vector2d): Konva.Vector2d {
-    return {
-      x: pos.x < 0 ? pos.x : (this.stage as any).absolutePosition().x,
-      y: pos.y < 0 ? pos.y : (this.stage as any).absolutePosition().y,
-    };
-  }
-
-  private changeKonvaStageSize(width: number, height: number): void {
-    if (this.stage) {
-      this.stage.width(width);
-      this.stage.height(height);
-      this.stage.batchDraw();
     }
   }
 

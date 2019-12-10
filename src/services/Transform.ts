@@ -31,4 +31,17 @@ export default class TransformService {
     });
     layers.main.draw();
   }
+
+  public static stageDragBoundFunc(pos: Konva.Vector2d, stage: Konva.Stage): Konva.Vector2d {
+    return {
+      x: pos.x < 0 ? pos.x : (stage as any).absolutePosition().x,
+      y: pos.y < 0 ? pos.y : (stage as any).absolutePosition().y,
+    };
+  }
+
+  public static changeStageSize(stage: Konva.Stage, width: number, height: number): void {
+    stage.width(width);
+    stage.height(height);
+    stage.batchDraw();
+  }
 }
