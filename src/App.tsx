@@ -1,11 +1,13 @@
 import React, { ReactNode } from 'react';
 import ReactResizeDetector from 'react-resize-detector';
+import Konva from 'konva';
 import KonvaCanvas from './components/KonvaCanvas';
 import styles from './App.module.css';
 
 class App extends React.PureComponent<{}, {}> {
   public componentDidMount(): void {
     this.preventMobileHeaderSpazz();
+    (Konva as any)._pointerEventsEnabled = true;
   }
 
   private preventMobileHeaderSpazz(): void {

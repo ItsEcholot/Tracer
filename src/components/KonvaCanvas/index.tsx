@@ -53,7 +53,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   }
 
   private onTouchStart(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
-    this.updateClientCapabilities(event.evt);
     if (!this.stage) return;
     if (this.clientCapabilities.pen) {
       if (event.target.hasName('shape')) {
@@ -86,10 +85,16 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   }
 
   private onTouchMove(event: Konva.KonvaEventObject<TouchEvent | PointerEvent>): void {
+    event.evt.preventDefault(); // Chrome on desktop would maybe otherwise think that we start a gesture
     if (!this.drawing || !this.stage || !this.currentLine) return;
     if (!this.clientCapabilities.force) return;
 
     const pointerPos = PointerService.getStagePointerPosition(this.stage);
+    if (
+      pointerPos.x === this.currentForces[this.currentForces.length - 1].pos.x &&
+      pointerPos.y === this.currentForces[this.currentForces.length - 1].pos.y
+    )
+      return;
     if (this.clientCapabilities.force && window.TouchEvent && event.evt instanceof TouchEvent) {
       this.currentForces.push({ pos: pointerPos, force: Math.max(event.evt.targetTouches[0].force, 0.1) });
     } else if (this.clientCapabilities.force && window.PointerEvent && event.evt instanceof PointerEvent) {
@@ -114,10 +119,10 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       this.layers.main.batchDraw();
 
       this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
-      this.stage.on('mouseup touchend', this.onTouchEnd.bind(this));
+      this.stage.on('mouseup touchend touchcancel', this.onTouchEnd.bind(this));
       this.stage.on('mousemove touchmove', this.onTouchMove.bind(this));
-      this.containerRef.current.addEventListener('touchcancel', () => {
-        this.onTouchEnd();
+      this.containerRef.current.addEventListener('pointerdown', event => {
+        this.updateClientCapabilities(event);
       });
       this.containerRef.current.addEventListener('pointermove', event => {
         if (this.stage) {
@@ -146,11 +151,16 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     }
   }
 
-  private updateClientCapabilities(event: MouseEvent | TouchEvent): void {
+  private updateClientCapabilities(event: MouseEvent | TouchEvent | PointerEvent): void {
     if (window.TouchEvent && event instanceof TouchEvent) {
       if (event.targetTouches[0].force) {
         this.clientCapabilities.force = true;
-        this.clientCapabilities.pen = event.targetTouches[0].rotationAngle !== 0 || event.targetTouches[0].force < 1.0;
+        this.clientCapabilities.pen = event.targetTouches[0].rotationAngle !== 0;
+      }
+    } else if (window.PointerEvent && event instanceof PointerEvent) {
+      if (event.pressure) {
+        this.clientCapabilities.force = true;
+        this.clientCapabilities.pen = event.pointerType === 'pen';
       }
     }
   }

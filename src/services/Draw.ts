@@ -17,9 +17,11 @@ export default class DrawService {
       closed: true,
       name: 'userContent writing',
       listening: false,
-      hitStrokeWidth: 25,
+      draggable: false,
+      hitStrokeWidth: 0,
       perfectDrawEnabled: false,
     });
+    currentLine.shadowForStrokeEnabled(false);
 
     return currentLine;
   }
