@@ -50,6 +50,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
       if (!this.stage) return;
       TransformService.changeStageSize(this.stage, this.props.width, this.props.height);
+      this.setupBGGrid(this.stage, this.layers.bgGrid);
     }
   }
 
@@ -115,15 +116,16 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         dragBoundFunc: (pos): Konva.Vector2d => TransformService.stageDragBoundFunc(pos, this.stage as any),
       });
 
+      this.layers.bgGrid = new Konva.FastLayer();
       this.layers.main = new Konva.Layer();
+      this.stage.add(this.layers.bgGrid);
       this.stage.add(this.layers.main);
-      this.layers.main.batchDraw();
 
       this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
       this.stage.on('mouseup touchend touchcancel', this.onTouchEnd.bind(this));
-      this.stage.on('mousemove touchmove', this.onTouchMove.bind(this));
+      this.stage.on('touchmove', this.onTouchMove.bind(this));
       this.containerRef.current.addEventListener('pointerdown', event => {
-        ClientCapabilitiesService.updateClientCapabilities(event, this.clientCapabilities);
+        this.clientCapabilities = ClientCapabilitiesService.updateClientCapabilities(event, this.clientCapabilities);
       });
       this.containerRef.current.addEventListener('pointermove', event => {
         if (this.stage) {
@@ -133,23 +135,54 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       });
 
       const circle = new Konva.Circle({
-        x: 0,
-        y: 0,
+        x: 250,
+        y: 250,
         radius: 100,
-        fill: 'black',
+        fill: 'red',
         name: 'userContent shape',
       });
       this.layers.main.add(circle);
-      const circle2 = new Konva.Circle({
-        x: 500,
-        y: 500,
-        radius: 100,
-        fill: 'black',
-        name: 'userContent shape',
-      });
-      this.layers.main.add(circle2);
-      this.layers.main.batchDraw();
+      circle.draw();
     }
+  }
+
+  private setupBGGrid(stage: Konva.Stage, layer: Konva.Layer | Konva.FastLayer): void {
+    layer.destroyChildren();
+
+    const spacingX = 25;
+    const spacingY = 25;
+    const startX = Math.floor((-stage.x() - stage.width()) / spacingX) * spacingX;
+    const endX = Math.floor((-stage.x() + stage.width() * 1.5) / spacingX) * spacingX;
+    const startY = Math.floor((-stage.y() - stage.height()) / spacingY) * spacingY;
+    const endY = Math.floor((-stage.y() + stage.height() * 1.5) / spacingY) * spacingY;
+
+    for (let x = startX; x < endX; x += spacingX) {
+      const line = new Konva.Line({
+        points: [x, 0, x, endY],
+        stroke: 'lightgrey',
+        strokeWidth: 1,
+        listening: false,
+        hitStrokeWidth: 0,
+      });
+      line.transformsEnabled('position');
+      line.shadowForStrokeEnabled(false);
+      layer.add(line);
+    }
+    for (let y = startY; y < endY; y += spacingY) {
+      const line = new Konva.Line({
+        points: [0, y, endX, y],
+        stroke: 'lightgrey',
+        strokeWidth: 1,
+        listening: false,
+        hitStrokeWidth: 0,
+      });
+      line.transformsEnabled('position');
+      line.shadowForStrokeEnabled(false);
+      layer.add(line);
+    }
+
+    layer.batchDraw();
+    layer.cache();
   }
 
   public render(): ReactNode {
