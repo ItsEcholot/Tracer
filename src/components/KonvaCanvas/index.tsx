@@ -7,6 +7,7 @@ import styles from './styles.module.css';
 import DrawService from '../../services/Draw';
 import PointerService from '../../services/Pointer';
 import CurrentForce from '../../types/CurrentForce';
+import ClientCapabilitiesService from '../../services/ClientCapabilities';
 
 interface KonvaCanvasProps {
   width: number;
@@ -122,7 +123,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       this.stage.on('mouseup touchend touchcancel', this.onTouchEnd.bind(this));
       this.stage.on('mousemove touchmove', this.onTouchMove.bind(this));
       this.containerRef.current.addEventListener('pointerdown', event => {
-        this.updateClientCapabilities(event);
+        ClientCapabilitiesService.updateClientCapabilities(event, this.clientCapabilities);
       });
       this.containerRef.current.addEventListener('pointermove', event => {
         if (this.stage) {
@@ -148,20 +149,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       });
       this.layers.main.add(circle2);
       this.layers.main.batchDraw();
-    }
-  }
-
-  private updateClientCapabilities(event: MouseEvent | TouchEvent | PointerEvent): void {
-    if (window.TouchEvent && event instanceof TouchEvent) {
-      if (event.targetTouches[0].force) {
-        this.clientCapabilities.force = true;
-        this.clientCapabilities.pen = event.targetTouches[0].rotationAngle !== 0;
-      }
-    } else if (window.PointerEvent && event instanceof PointerEvent) {
-      if (event.pressure) {
-        this.clientCapabilities.force = true;
-        this.clientCapabilities.pen = event.pointerType === 'pen';
-      }
     }
   }
 
