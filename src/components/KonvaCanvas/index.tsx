@@ -36,7 +36,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   constructor(props: KonvaCanvasProps) {
     super(props);
     this.state = {
-      debug: 0,
+      debug: '---',
       strokeColor: '#000000',
       strokeWidth: 4,
     };
@@ -50,7 +50,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
       if (!this.stage) return;
       TransformService.changeStageSize(this.stage, this.props.width, this.props.height);
-      this.setupBGGrid(this.stage, this.layers.bgGrid);
+      DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
     }
   }
 
@@ -116,7 +116,9 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         dragBoundFunc: (pos): Konva.Vector2d => TransformService.stageDragBoundFunc(pos, this.stage as any),
       });
 
-      this.layers.bgGrid = new Konva.FastLayer();
+      this.layers.bgGrid = new Konva.Layer({
+        hitGraphEnabled: false,
+      });
       this.layers.main = new Konva.Layer();
       this.stage.add(this.layers.bgGrid);
       this.stage.add(this.layers.main);
@@ -133,6 +135,10 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         }
         this.onTouchMove({ evt: event } as any);
       });
+      this.stage.on('dragend', () => {
+        if (!this.stage) return;
+        DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
+      });
 
       const circle = new Konva.Circle({
         x: 250,
@@ -146,49 +152,10 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     }
   }
 
-  private setupBGGrid(stage: Konva.Stage, layer: Konva.Layer | Konva.FastLayer): void {
-    layer.destroyChildren();
-
-    const spacingX = 25;
-    const spacingY = 25;
-    const startX = Math.floor((-stage.x() - stage.width()) / spacingX) * spacingX;
-    const endX = Math.floor((-stage.x() + stage.width() * 1.5) / spacingX) * spacingX;
-    const startY = Math.floor((-stage.y() - stage.height()) / spacingY) * spacingY;
-    const endY = Math.floor((-stage.y() + stage.height() * 1.5) / spacingY) * spacingY;
-
-    for (let x = startX; x < endX; x += spacingX) {
-      const line = new Konva.Line({
-        points: [x, 0, x, endY],
-        stroke: 'lightgrey',
-        strokeWidth: 1,
-        listening: false,
-        hitStrokeWidth: 0,
-      });
-      line.transformsEnabled('position');
-      line.shadowForStrokeEnabled(false);
-      layer.add(line);
-    }
-    for (let y = startY; y < endY; y += spacingY) {
-      const line = new Konva.Line({
-        points: [0, y, endX, y],
-        stroke: 'lightgrey',
-        strokeWidth: 1,
-        listening: false,
-        hitStrokeWidth: 0,
-      });
-      line.transformsEnabled('position');
-      line.shadowForStrokeEnabled(false);
-      layer.add(line);
-    }
-
-    layer.batchDraw();
-    layer.cache();
-  }
-
   public render(): ReactNode {
     return (
       <>
-        <h3 className={styles.Debug}>{JSON.stringify(this.state.debug)}</h3>
+        {this.state.debug === '---' ? null : <h3 className={styles.Debug}>{JSON.stringify(this.state.debug)}</h3>}
         <div className={styles.Container} ref={this.containerRef} />
       </>
     );
