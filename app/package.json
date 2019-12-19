@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && cp -r build/* ../www/",
+    "build": "react-scripts build && cp -a ./build/. ../www/",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src/**/*.ts src/**/*.tsx"
@@ -24,6 +24,7 @@
       "last 1 safari version"
     ]
   },
+  "homepage" : "./",
   "dependencies": {
     "classnames": "^2.2.6",
     "konva": "^4.0.18",

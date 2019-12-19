@@ -5,7 +5,8 @@
   "description": "Tracer Notes App",
   "main": "index.js",
   "scripts": {
-    "start:android": "cordova run android --device"
+    "buildwebapp": "cd app && npm run build && cd ..",
+    "start:android": "npm run buildwebapp && cordova run android --device"
   },
   "keywords": [
     "ecosystem:cordova"
