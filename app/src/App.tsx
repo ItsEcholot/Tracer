@@ -4,10 +4,16 @@ import Konva from 'konva';
 import KonvaCanvas from './components/KonvaCanvas';
 import styles from './App.module.css';
 
+declare const StylusPlugin: any;
+
 class App extends React.PureComponent<{}, {}> {
   public componentDidMount(): void {
     this.preventMobileHeaderSpazz();
+    // eslint-disable-next-line no-underscore-dangle
     (Konva as any)._pointerEventsEnabled = true;
+    if ((window as any).StylusPlugin) {
+      StylusPlugin.registerListeners();
+    }
   }
 
   private preventMobileHeaderSpazz(): void {

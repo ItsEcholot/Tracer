@@ -139,6 +139,9 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         if (!this.stage) return;
         DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
       });
+      document.addEventListener('stylusplugin-move', event => {
+        console.dir(event);
+      });
 
       const circle = new Konva.Circle({
         x: 250,
