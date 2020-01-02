@@ -3,11 +3,12 @@ import Konva from 'konva';
 import LayerList from '../../types/LayerList';
 import ClientCapabilities from '../../types/ClientCapabilities';
 import TransformService from '../../services/Transform';
-import styles from './styles.module.css';
 import DrawService from '../../services/Draw';
 import PointerService from '../../services/Pointer';
 import CurrentForce from '../../types/CurrentForce';
 import ClientCapabilitiesService from '../../services/ClientCapabilities';
+
+import styles from './styles.module.css';
 
 interface KonvaCanvasProps {
   width: number;
@@ -161,7 +162,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         x: 250,
         y: 250,
         radius: 100,
-        fill: 'red',
+        fill: 'black',
         name: 'userContent shape',
       });
       this.layers.main.add(circle);

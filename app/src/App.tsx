@@ -3,6 +3,7 @@ import ReactResizeDetector from 'react-resize-detector';
 import Konva from 'konva';
 import KonvaCanvas from './components/KonvaCanvas';
 import styles from './App.module.css';
+import Toolbar from './components/Toolbar';
 
 declare const StylusPlugin: any;
 
@@ -29,6 +30,7 @@ class App extends React.PureComponent<{}, {}> {
   public render(): React.ReactNode {
     return (
       <div className={styles.App}>
+        <Toolbar />
         <ReactResizeDetector handleWidth handleHeight>
           {({ width, height }: { width: number; height: number }): ReactNode => (
             <KonvaCanvas width={width} height={height} />

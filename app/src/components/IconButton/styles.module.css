@@ -1,0 +1,27 @@
+button {
+  background: none;
+  border: none;
+  user-select: none;
+  text-shadow: inherit;
+  
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: stretch;
+  align-content: stretch;
+}
+
+.Icon {
+  font-size: 1.75rem;
+}
+
+.Text {
+  
+}
+
+button:hover .Text {
+}
+
+button:hover .Icon {
+}
