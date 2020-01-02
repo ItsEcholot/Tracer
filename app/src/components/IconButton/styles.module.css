@@ -3,6 +3,8 @@ button {
   border: none;
   user-select: none;
   text-shadow: inherit;
+  cursor: pointer;
+  color: white;
   
   display: flex;
   flex-direction: column;
@@ -17,7 +19,9 @@ button {
 }
 
 .Text {
-  
+}
+
+button:hover {
 }
 
 button:hover .Text {

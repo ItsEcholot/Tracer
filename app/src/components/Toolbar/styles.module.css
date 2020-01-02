@@ -16,15 +16,6 @@
   transform: translateX(-50%);
 }
 
-.ToolbarContainer.Brightener {
-  margin-top: 15px;
-  height: 58px;
-
-  background-color: rgba(230, 230, 230, 0.75);
-  filter: blur(5px);
-  mix-blend-mode: lighten;
-}
-
 .Toolbar {
   display: flex;
   flex-direction: row;
@@ -36,9 +27,8 @@
   padding: 0;
   margin: 0;
   margin-top: 15px;
-  border: 1px solid black;
   border-radius: 8px;
-  filter: drop-shadow(5px 5px 4px rgba(0,0,0,1)); /* url(#white-background-filter); */
+  background-image: linear-gradient(to right, rgba(82, 134, 255, 0.75), rgba(0, 153, 255, 0.75), rgba(0, 170, 255, 0.75), rgba(0, 185, 246, 0.75), rgba(18, 195, 235, 0.75));
   backdrop-filter: blur(5px);
   /* background-color: rgba(255,255,255,0.1); */
 }
@@ -48,10 +38,6 @@
   border-bottom-left-radius: 8px;
 }
 
-.Toolbar li:nth-child(2n) {
-  border-left: 1px solid black;
-}
-
 .Toolbar li {
   float: left;
   list-style: none;
@@ -59,4 +45,11 @@
   padding-right: 5px;
   font-size: 2rem;
   line-height: 0;
+  transition: background-color 0.2s ease-in;
+}
+
+.Toolbar li:hover {
+  cursor: pointer;
+  background-color: rgb(34, 212, 189);
+  transition: background-color 0.2s ease-out;
 }
