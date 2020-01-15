@@ -19,7 +19,7 @@ class App extends React.PureComponent<{}, AppState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      toolMode: ToolModes.Write,
+      toolMode: ToolModes.Draw,
     };
   }
 
@@ -28,6 +28,10 @@ class App extends React.PureComponent<{}, AppState> {
     if (window.StylusPlugin) {
       window.StylusPlugin.registerListeners();
     }
+  }
+
+  private onToolModeChange(toolMode: ToolModes): void {
+    this.setState({ toolMode });
   }
 
   private preventMobileHeaderSpazz(): void {
@@ -43,7 +47,7 @@ class App extends React.PureComponent<{}, AppState> {
   public render(): React.ReactNode {
     return (
       <div className={styles.App}>
-        <Toolbar toolMode={this.state.toolMode} />
+        <Toolbar toolMode={this.state.toolMode} onToolModeChange={this.onToolModeChange.bind(this)} />
         <ReactResizeDetector handleWidth handleHeight>
           {({ width, height }: { width: number; height: number }): ReactNode => (
             <KonvaCanvas width={width} height={height} toolMode={this.state.toolMode} />

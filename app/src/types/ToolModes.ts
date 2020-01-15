@@ -1,5 +1,6 @@
 enum ToolModes {
-  Write,
+  Draw,
+  Select,
 }
 
 export default ToolModes;

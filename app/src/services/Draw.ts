@@ -26,6 +26,11 @@ export default class DrawService {
     return currentLine;
   }
 
+  public static stopDrawing(currentLine: Konva.Line, stage: Konva.Stage): void {
+    currentLine.cache();
+    stage.draggable(true);
+  }
+
   public static draw(currentLine: Konva.Line, currentForces: CurrentForce[], strokeWidth: number): void {
     if (currentForces.length > 2) {
       const middlePoints = OffsetPointsService.calcOffsetPointsAverage(
@@ -57,11 +62,6 @@ export default class DrawService {
     }
 
     currentLine.draw();
-  }
-
-  public static stopDrawing(currentLine: Konva.Line, stage: Konva.Stage): void {
-    currentLine.cache();
-    stage.draggable(true);
   }
 
   public static drawBGGrid(stage: Konva.Stage, layer: Konva.Layer | Konva.FastLayer): void {
@@ -101,5 +101,41 @@ export default class DrawService {
 
     layer.batchDraw();
     layer.cache();
+  }
+
+  public static startSelecting(stage: Konva.Stage, layers: LayerList): Konva.Line {
+    stage.draggable(false);
+    TransformService.stopTransform(stage, layers);
+
+    layers.selecting.destroyChildren();
+    layers.selecting.batchDraw();
+    const currentLine = new Konva.Line({
+      stroke: 'black',
+      dash: [10, 5],
+      fill: 'rgba(200,200,200,0.3)',
+      points: [],
+      lineCap: 'round',
+      lineJoin: 'round',
+      tension: 0.4,
+      closed: true,
+      name: 'userContent selecting',
+      listening: false,
+      draggable: false,
+      hitStrokeWidth: 0,
+      perfectDrawEnabled: false,
+    });
+    currentLine.shadowForStrokeEnabled(false);
+
+    return currentLine;
+  }
+
+  public static stopSelecting(currentLine: Konva.Line, stage: Konva.Stage): void {
+    stage.draggable(true);
+  }
+
+  public static select(currentLine: Konva.Line, layer: Konva.Layer, pointerPos: Konva.Vector2d): void {
+    const oldPoints = currentLine.points();
+    currentLine.points([...oldPoints, pointerPos.x, pointerPos.y]);
+    layer.batchDraw();
   }
 }

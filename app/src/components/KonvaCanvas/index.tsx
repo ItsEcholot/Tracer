@@ -57,19 +57,23 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private onTouchStart(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
     if (!this.stage) return;
-    if (this.props.toolMode === ToolModes.Write && this.clientCapabilities.pen) {
+    if (this.clientCapabilities.pen) {
       if (event.target && event.target.hasName('shape')) {
         this.disabledListeningShape = event.target;
         this.disabledListeningShape.listening(false);
       }
       this.drawing = true;
-
-      const pointerPos = PointerService.getStagePointerPosition(this.stage);
-      if (this.clientCapabilities.force && (event.evt as TouchEvent).targetTouches) {
-        this.currentForces = [{ pos: pointerPos, force: (event.evt as TouchEvent).targetTouches[0].force }];
+      if (this.props.toolMode === ToolModes.Draw) {
+        const pointerPos = PointerService.getStagePointerPosition(this.stage);
+        if (this.clientCapabilities.force && (event.evt as TouchEvent).targetTouches) {
+          this.currentForces = [{ pos: pointerPos, force: (event.evt as TouchEvent).targetTouches[0].force }];
+        }
+        this.currentLine = DrawService.startDrawing(this.stage, this.layers, this.state.strokeColor);
+        this.layers.main.add(this.currentLine);
+      } else if (this.props.toolMode === ToolModes.Select) {
+        this.currentLine = DrawService.startSelecting(this.stage, this.layers);
+        this.layers.selecting.add(this.currentLine);
       }
-      this.currentLine = DrawService.startDrawing(this.stage, this.layers, this.state.strokeColor);
-      this.layers.main.add(this.currentLine);
     } else {
       TransformService.startTransform(event.target, this.stage, this.layers);
     }
@@ -77,14 +81,20 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private onTouchEnd(): void {
     if (!this.currentLine || !this.stage || !this.drawing) return;
-    DrawService.stopDrawing(this.currentLine, this.stage);
     if (this.disabledListeningShape) {
       this.disabledListeningShape.listening(true);
       this.disabledListeningShape = undefined;
     }
-    this.currentForces = [];
+    if (this.props.toolMode === ToolModes.Draw) {
+      DrawService.stopDrawing(this.currentLine, this.stage);
+      this.currentForces = [];
+      this.layers.main.batchDraw();
+    } else if (this.props.toolMode === ToolModes.Select) {
+      DrawService.stopSelecting(this.currentLine, this.stage);
+      this.layers.selecting.batchDraw();
+    }
+
     this.drawing = false;
-    this.layers.main.batchDraw();
   }
 
   private onTouchMove(event: Konva.KonvaEventObject<TouchEvent | PointerEvent>): void {
@@ -93,21 +103,25 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     if (!this.clientCapabilities.force) return;
 
     const pointerPos = PointerService.getStagePointerPosition(this.stage);
-    if (
-      this.currentForces.length > 0 &&
-      pointerPos.x === this.currentForces[this.currentForces.length - 1].pos.x &&
-      pointerPos.y === this.currentForces[this.currentForces.length - 1].pos.y
-    )
-      return;
-    if (this.clientCapabilities.force && (event.evt as TouchEvent).targetTouches) {
-      this.currentForces.push({
-        pos: pointerPos,
-        force: Math.max((event.evt as TouchEvent).targetTouches[0].force, 0.1),
-      });
-    } else if (this.clientCapabilities.force && (event.evt as PointerEvent).pressure) {
-      this.currentForces.push({ pos: pointerPos, force: Math.max((event.evt as PointerEvent).pressure, 0.1) });
+    if (this.props.toolMode === ToolModes.Draw) {
+      if (
+        this.currentForces.length > 0 &&
+        pointerPos.x === this.currentForces[this.currentForces.length - 1].pos.x &&
+        pointerPos.y === this.currentForces[this.currentForces.length - 1].pos.y
+      )
+        return;
+      if (this.clientCapabilities.force && (event.evt as TouchEvent).targetTouches) {
+        this.currentForces.push({
+          pos: pointerPos,
+          force: Math.max((event.evt as TouchEvent).targetTouches[0].force, 0.1),
+        });
+      } else if (this.clientCapabilities.force && (event.evt as PointerEvent).pressure) {
+        this.currentForces.push({ pos: pointerPos, force: Math.max((event.evt as PointerEvent).pressure, 0.1) });
+      }
+      DrawService.draw(this.currentLine, this.currentForces, this.state.strokeWidth);
+    } else if (this.props.toolMode === ToolModes.Select) {
+      DrawService.select(this.currentLine, this.layers.selecting, pointerPos);
     }
-    DrawService.draw(this.currentLine, this.currentForces, this.state.strokeWidth);
   }
 
   private setupKonva(): void {
@@ -124,8 +138,12 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         hitGraphEnabled: false,
       });
       this.layers.main = new Konva.Layer();
+      this.layers.selecting = new Konva.Layer({
+        hitGraphEnabled: false,
+      });
       this.stage.add(this.layers.bgGrid);
       this.stage.add(this.layers.main);
+      this.stage.add(this.layers.selecting);
 
       this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
       this.stage.on('mouseup touchend touchcancel', this.onTouchEnd.bind(this));

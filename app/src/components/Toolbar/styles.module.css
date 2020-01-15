@@ -29,27 +29,26 @@
   box-shadow: 3px 3px 10px 0px rgba(0,0,0,0.3);
 }
 
-.Toolbar li:first-child {
+.Toolbar .IconButton {
+  color: black;
+  padding-left: 10px;
+  padding-right: 10px;
+  transition: background-color 0.1s ease-in, color 0.1s ease-in;
+}
+
+.Toolbar .IconButton:first-child {
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;
 }
 
-.Toolbar li {
-  float: left;
-  list-style: none;
-  padding-left: 5px;
-  padding-right: 5px;
-  font-size: 2rem;
-  line-height: 0;
-  transition: background-color 0.2s ease-in;
+.Toolbar .IconButton:hover {
+  background-color: rgba(0,0,0, 0.3);
+  color: white;
+  transition: background-color 0.1s ease-out, color 0.1s ease-out;
 }
 
-.Toolbar li:hover {
-  cursor: pointer;
+.Toolbar .IconButton.Active {
   background-color: rgba(0,0,0, 0.3);
-  transition: background-color 0.2s ease-out;
-}
-
-.Toolbar li.Active {
-  background-color: rgba(0,0,0, 0.3);
+  color: white;
+  transition: background-color 0.1s ease-out, color 0.1s ease-out;
 }
