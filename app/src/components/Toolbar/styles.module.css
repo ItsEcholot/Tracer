@@ -3,10 +3,6 @@
   position: fixed;
 }
 
-.Container {
-
-}
-
 .ToolbarContainer {
   z-index: 100;
   position: fixed;
@@ -28,9 +24,9 @@
   margin: 0;
   margin-top: 15px;
   border-radius: 8px;
-  background-image: linear-gradient(to right, rgba(82, 134, 255, 0.75), rgba(0, 153, 255, 0.75), rgba(0, 170, 255, 0.75), rgba(0, 185, 246, 0.75), rgba(18, 195, 235, 0.75));
   backdrop-filter: blur(5px);
-  /* background-color: rgba(255,255,255,0.1); */
+  background-color: rgba(226, 226, 226, 0.4);
+  box-shadow: 3px 3px 10px 0px rgba(0,0,0,0.3);
 }
 
 .Toolbar li:first-child {
@@ -50,6 +46,10 @@
 
 .Toolbar li:hover {
   cursor: pointer;
-  background-color: rgb(34, 212, 189);
+  background-color: rgba(0,0,0, 0.3);
   transition: background-color 0.2s ease-out;
+}
+
+.Toolbar li.Active {
+  background-color: rgba(0,0,0, 0.3);
 }

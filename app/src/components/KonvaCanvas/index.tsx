@@ -7,16 +7,17 @@ import DrawService from '../../services/Draw';
 import PointerService from '../../services/Pointer';
 import CurrentForce from '../../types/CurrentForce';
 import ClientCapabilitiesService from '../../services/ClientCapabilities';
+import ToolModes from '../../types/ToolModes';
 
 import styles from './styles.module.css';
 
 interface KonvaCanvasProps {
   width: number;
   height: number;
+  toolMode: ToolModes;
 }
 
 interface KonvaCanvasState {
-  debug: any;
   strokeColor: string;
   strokeWidth: number;
 }
@@ -37,7 +38,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   constructor(props: KonvaCanvasProps) {
     super(props);
     this.state = {
-      debug: '---',
       strokeColor: '#000000',
       strokeWidth: 4,
     };
@@ -57,7 +57,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private onTouchStart(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
     if (!this.stage) return;
-    if (this.clientCapabilities.pen) {
+    if (this.props.toolMode === ToolModes.Write && this.clientCapabilities.pen) {
       if (event.target && event.target.hasName('shape')) {
         this.disabledListeningShape = event.target;
         this.disabledListeningShape.listening(false);
@@ -171,12 +171,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   }
 
   public render(): ReactNode {
-    return (
-      <>
-        {this.state.debug === '---' ? null : <h3 className={styles.Debug}>{JSON.stringify(this.state.debug)}</h3>}
-        <div className={styles.Container} ref={this.containerRef} />
-      </>
-    );
+    return <div className={styles.Container} ref={this.containerRef} />;
   }
 }
 

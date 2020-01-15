@@ -4,10 +4,22 @@ import Konva from 'konva';
 import KonvaCanvas from './components/KonvaCanvas';
 import styles from './App.module.css';
 import Toolbar from './components/Toolbar';
+import ToolModes from './types/ToolModes';
 
 declare const StylusPlugin: any;
 
-class App extends React.PureComponent<{}, {}> {
+interface AppState {
+  toolMode: ToolModes;
+}
+
+class App extends React.PureComponent<{}, AppState> {
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      toolMode: ToolModes.Write,
+    };
+  }
+
   public componentDidMount(): void {
     this.preventMobileHeaderSpazz();
     // eslint-disable-next-line no-underscore-dangle
@@ -30,10 +42,10 @@ class App extends React.PureComponent<{}, {}> {
   public render(): React.ReactNode {
     return (
       <div className={styles.App}>
-        <Toolbar />
+        <Toolbar toolMode={this.state.toolMode} />
         <ReactResizeDetector handleWidth handleHeight>
           {({ width, height }: { width: number; height: number }): ReactNode => (
-            <KonvaCanvas width={width} height={height} />
+            <KonvaCanvas width={width} height={height} toolMode={this.state.toolMode} />
           )}
         </ReactResizeDetector>
       </div>
