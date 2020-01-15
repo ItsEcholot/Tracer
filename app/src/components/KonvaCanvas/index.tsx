@@ -83,11 +83,21 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private onTouchEnd(): void {
     if (!this.stage) return;
+
     if (!this.drawing) {
       this.lastPinchZoomDist = 0;
       this.lastPinchZoomPoint = undefined;
       DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
+      this.layers.main
+        .getChildren(node => node.hasName('writing'))
+        .each(node => {
+          if (!this.stage) return;
+          node.clearCache();
+          node.cache({ pixelRatio: 1 + this.stage.scaleX(), offset: 1 });
+        });
+      this.layers.main.batchDraw();
     }
+
     if (!this.currentLine || !this.drawing) return;
     if (this.disabledListeningShape) {
       this.disabledListeningShape.listening(true);
@@ -144,7 +154,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
           y: (pointer.y / newScale - startPos.y) * newScale,
         };
         this.stage.scale({ x: newScale, y: newScale });
-        this.stage.position(newPosition);
+        this.stage.position(TransformService.stageDragBoundFunc(newPosition, this.stage));
         this.stage.batchDraw();
         this.lastPinchZoomDist = dist;
       }

@@ -8,6 +8,8 @@ export default class PointerService {
 
     pointerPos.x += -stageAbsolutePos.x;
     pointerPos.y += -stageAbsolutePos.y;
+    pointerPos.x /= stage.scaleX();
+    pointerPos.y /= stage.scaleY();
     return pointerPos;
   }
 

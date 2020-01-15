@@ -13,7 +13,7 @@ export default class DrawService {
       points: [],
       lineCap: 'round',
       lineJoin: 'round',
-      tension: 0.4,
+      // tension: 0.4,
       closed: true,
       name: 'userContent writing',
       listening: false,
@@ -27,7 +27,8 @@ export default class DrawService {
   }
 
   public static stopDrawing(currentLine: Konva.Line, stage: Konva.Stage): void {
-    currentLine.cache();
+    currentLine.tension(0.4);
+    currentLine.cache({ pixelRatio: 1 + stage.scaleX(), offset: 1 });
     stage.draggable(true);
   }
 
@@ -60,7 +61,6 @@ export default class DrawService {
       );
       currentLine.points([startPoints.point1.x, startPoints.point1.y, startPoints.point2.x, startPoints.point2.y]);
     }
-
     currentLine.draw();
   }
 
@@ -108,7 +108,7 @@ export default class DrawService {
     }
 
     layer.batchDraw();
-    layer.cache();
+    layer.cache({ pixelRatio: 1 + stage.scaleX() });
   }
 
   public static startSelecting(stage: Konva.Stage, layers: LayerList): Konva.Line {
