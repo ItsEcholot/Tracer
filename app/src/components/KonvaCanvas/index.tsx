@@ -34,8 +34,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   private currentLine: Konva.Line | undefined;
   private disabledListeningShape: Konva.Shape | Konva.Stage | undefined;
   private currentForces: CurrentForce[] = [];
-  private lastPinchZoomDist = 0;
-  private lastPinchZoomPoint: Konva.Vector2d | undefined;
 
   constructor(props: KonvaCanvasProps) {
     super(props);
@@ -65,6 +63,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
         this.disabledListeningShape.listening(false);
       }
       this.drawing = true;
+
       if (this.props.toolMode === ToolModes.Draw) {
         const pointerPos = PointerService.getStagePointerPosition(this.stage);
         if (this.clientCapabilities.force && (event.evt as TouchEvent).targetTouches) {
@@ -85,16 +84,8 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     if (!this.stage) return;
 
     if (!this.drawing) {
-      this.lastPinchZoomDist = 0;
-      this.lastPinchZoomPoint = undefined;
+      TransformService.pinchToZoomEnd(this.stage, this.layers);
       DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
-      this.layers.main
-        .getChildren(node => node.hasName('writing'))
-        .each(node => {
-          if (!this.stage) return;
-          node.clearCache();
-          node.cache({ pixelRatio: 1 + this.stage.scaleX(), offset: 1 });
-        });
       this.layers.main.batchDraw();
     }
 
@@ -123,40 +114,12 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       (event.evt as TouchEvent).targetTouches &&
       (event.evt as TouchEvent).targetTouches.length === 2
     ) {
+      // Pinch to zoom
       const touch1 = (event.evt as TouchEvent).targetTouches[0];
       const touch2 = (event.evt as TouchEvent).targetTouches[1];
       if (touch1 && touch2) {
         event.evt.stopPropagation();
-        const oldScale = this.stage.scaleX();
-        const dist = PointerService.getDistance(
-          { x: touch1.clientX, y: touch1.clientY },
-          { x: touch2.clientX, y: touch2.clientY },
-        );
-        if (!this.lastPinchZoomDist) {
-          this.lastPinchZoomDist = dist;
-        }
-        const delta = dist - this.lastPinchZoomDist;
-        const px = (touch1.clientX + touch2.clientX) / 2;
-        const py = (touch1.clientY + touch2.clientY) / 2;
-        const pointer = this.lastPinchZoomPoint || PointerService.clientPointerRelativeToStage(px, py, this.stage);
-        if (!this.lastPinchZoomPoint) {
-          this.lastPinchZoomPoint = pointer;
-        }
-
-        const startPos: Konva.Vector2d = {
-          x: pointer.x / oldScale - this.stage.x() / oldScale,
-          y: pointer.y / oldScale - this.stage.y() / oldScale,
-        };
-        const scaleBy = 1.01 + Math.abs(delta) / 100;
-        const newScale = delta < 0 ? oldScale / scaleBy : oldScale * scaleBy;
-        const newPosition: Konva.Vector2d = {
-          x: (pointer.x / newScale - startPos.x) * newScale,
-          y: (pointer.y / newScale - startPos.y) * newScale,
-        };
-        this.stage.scale({ x: newScale, y: newScale });
-        this.stage.position(TransformService.stageDragBoundFunc(newPosition, this.stage));
-        this.stage.batchDraw();
-        this.lastPinchZoomDist = dist;
+        TransformService.pinchToZoom(this.stage, touch1, touch2);
       }
     }
     if (!this.drawing || !this.currentLine) return;
@@ -164,6 +127,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
     const pointerPos = PointerService.getStagePointerPosition(this.stage);
     if (this.props.toolMode === ToolModes.Draw) {
+      // Draw
       if (
         this.currentForces.length > 0 &&
         pointerPos.x === this.currentForces[this.currentForces.length - 1].pos.x &&
@@ -180,6 +144,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       }
       DrawService.draw(this.currentLine, this.currentForces, this.state.strokeWidth);
     } else if (this.props.toolMode === ToolModes.Select) {
+      // Select
       DrawService.select(this.currentLine, this.layers.selecting, pointerPos);
     }
   }
