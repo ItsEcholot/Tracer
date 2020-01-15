@@ -34,6 +34,8 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   private currentLine: Konva.Line | undefined;
   private disabledListeningShape: Konva.Shape | Konva.Stage | undefined;
   private currentForces: CurrentForce[] = [];
+  private lastPinchZoomDist = 0;
+  private lastPinchZoomPoint: Konva.Vector2d | undefined;
 
   constructor(props: KonvaCanvasProps) {
     super(props);
@@ -80,7 +82,13 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   }
 
   private onTouchEnd(): void {
-    if (!this.currentLine || !this.stage || !this.drawing) return;
+    if (!this.stage) return;
+    if (!this.drawing) {
+      this.lastPinchZoomDist = 0;
+      this.lastPinchZoomPoint = undefined;
+      DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
+    }
+    if (!this.currentLine || !this.drawing) return;
     if (this.disabledListeningShape) {
       this.disabledListeningShape.listening(true);
       this.disabledListeningShape = undefined;
@@ -99,7 +107,49 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
   private onTouchMove(event: Konva.KonvaEventObject<TouchEvent | PointerEvent>): void {
     event.evt.preventDefault(); // Chrome on desktop would maybe otherwise think that we start a gesture
-    if (!this.drawing || !this.stage || !this.currentLine) return;
+    if (!this.stage) return;
+    if (
+      !this.drawing &&
+      (event.evt as TouchEvent).targetTouches &&
+      (event.evt as TouchEvent).targetTouches.length === 2
+    ) {
+      const touch1 = (event.evt as TouchEvent).targetTouches[0];
+      const touch2 = (event.evt as TouchEvent).targetTouches[1];
+      if (touch1 && touch2) {
+        event.evt.stopPropagation();
+        const oldScale = this.stage.scaleX();
+        const dist = PointerService.getDistance(
+          { x: touch1.clientX, y: touch1.clientY },
+          { x: touch2.clientX, y: touch2.clientY },
+        );
+        if (!this.lastPinchZoomDist) {
+          this.lastPinchZoomDist = dist;
+        }
+        const delta = dist - this.lastPinchZoomDist;
+        const px = (touch1.clientX + touch2.clientX) / 2;
+        const py = (touch1.clientY + touch2.clientY) / 2;
+        const pointer = this.lastPinchZoomPoint || PointerService.clientPointerRelativeToStage(px, py, this.stage);
+        if (!this.lastPinchZoomPoint) {
+          this.lastPinchZoomPoint = pointer;
+        }
+
+        const startPos: Konva.Vector2d = {
+          x: pointer.x / oldScale - this.stage.x() / oldScale,
+          y: pointer.y / oldScale - this.stage.y() / oldScale,
+        };
+        const scaleBy = 1.01 + Math.abs(delta) / 100;
+        const newScale = delta < 0 ? oldScale / scaleBy : oldScale * scaleBy;
+        const newPosition: Konva.Vector2d = {
+          x: (pointer.x / newScale - startPos.x) * newScale,
+          y: (pointer.y / newScale - startPos.y) * newScale,
+        };
+        this.stage.scale({ x: newScale, y: newScale });
+        this.stage.position(newPosition);
+        this.stage.batchDraw();
+        this.lastPinchZoomDist = dist;
+      }
+    }
+    if (!this.drawing || !this.currentLine) return;
     if (!this.clientCapabilities.force) return;
 
     const pointerPos = PointerService.getStagePointerPosition(this.stage);
