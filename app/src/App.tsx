@@ -1,12 +1,15 @@
 import React, { ReactNode } from 'react';
 import ReactResizeDetector from 'react-resize-detector';
-import Konva from 'konva';
 import KonvaCanvas from './components/KonvaCanvas';
 import styles from './App.module.css';
 import Toolbar from './components/Toolbar';
 import ToolModes from './types/ToolModes';
 
-declare const StylusPlugin: any;
+declare global {
+  interface Window {
+    StylusPlugin: { registerListeners: () => void };
+  }
+}
 
 interface AppState {
   toolMode: ToolModes;
@@ -22,10 +25,8 @@ class App extends React.PureComponent<{}, AppState> {
 
   public componentDidMount(): void {
     this.preventMobileHeaderSpazz();
-    // eslint-disable-next-line no-underscore-dangle
-    (Konva as any)._pointerEventsEnabled = true;
-    if ((window as any).StylusPlugin) {
-      StylusPlugin.registerListeners();
+    if (window.StylusPlugin) {
+      window.StylusPlugin.registerListeners();
     }
   }
 
