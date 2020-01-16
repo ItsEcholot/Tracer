@@ -213,6 +213,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
       });
       this.layers.main.add(circle);
       circle.draw();
+      circle.cache({ pixelRatio: window.devicePixelRatio * this.stage.scaleX(), offset: 1 });
     }
   }
 

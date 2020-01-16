@@ -48,6 +48,8 @@ export default class TransformService {
 
   private static lastPinchZoomDist = 0;
   private static lastPinchZoomPoint: Konva.Vector2d | undefined;
+  private static minScale = 0.4;
+  private static maxScale = 2;
   public static pinchToZoom(stage: Konva.Stage, touch1: Touch, touch2: Touch): void {
     const oldScale = stage.scaleX();
     const dist = PointerService.getDistance(
@@ -71,6 +73,7 @@ export default class TransformService {
     };
     const scaleBy = 1.01 + Math.abs(delta) / 100;
     const newScale = delta < 0 ? oldScale / scaleBy : oldScale * scaleBy;
+    if (newScale < TransformService.minScale || newScale > TransformService.maxScale) return;
     const newPosition: Konva.Vector2d = {
       x: (pointer.x / newScale - startPos.x) * newScale,
       y: (pointer.y / newScale - startPos.y) * newScale,
@@ -85,10 +88,10 @@ export default class TransformService {
     TransformService.lastPinchZoomDist = 0;
     TransformService.lastPinchZoomPoint = undefined;
     layers.main
-      .getChildren(node => node.hasName('writing'))
+      .getChildren(node => node.hasName('userContent'))
       .each(node => {
         if (!stage) return;
-        node.cache({ pixelRatio: 1 + stage.scaleX(), offset: 1 });
+        node.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
       });
   }
 }

@@ -28,7 +28,7 @@ export default class DrawService {
 
   public static stopDrawing(currentLine: Konva.Line, stage: Konva.Stage): void {
     currentLine.tension(0.4);
-    currentLine.cache({ pixelRatio: 1 + stage.scaleX(), offset: 1 });
+    currentLine.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
     stage.draggable(true);
   }
 
@@ -108,7 +108,7 @@ export default class DrawService {
     }
 
     layer.batchDraw();
-    layer.cache({ pixelRatio: 1 + stage.scaleX() });
+    layer.cache({ pixelRatio: stage.scaleX() });
   }
 
   public static startSelecting(stage: Konva.Stage, layers: LayerList): Konva.Line {
