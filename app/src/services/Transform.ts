@@ -3,12 +3,8 @@ import LayerList from '../types/LayerList';
 import PointerService from './Pointer';
 
 export default class TransformService {
-  public static startTransform(target: Konva.Shape | Konva.Stage, stage: Konva.Stage, layers: LayerList): void {
-    if (target === stage) {
-      TransformService.stopTransform(stage, layers);
-      return;
-    }
-    if (!target.hasName('userContent')) {
+  public static startTransform(target: Konva.Node | Konva.Stage, stage: Konva.Stage, layers: LayerList): void {
+    if (!target.hasName('userContent') && target.id() !== 'selectionGroup') {
       return;
     }
 
@@ -21,16 +17,23 @@ export default class TransformService {
     });
     layers.main.add(transformer);
     transformer.attachTo(target);
-    layers.main.draw();
+    layers.main.batchDraw();
   }
 
   public static stopTransform(stage: Konva.Stage, layers: LayerList): void {
+    const selectionGroup = stage.findOne('#selectionGroup');
+    if (selectionGroup) {
+      const children = selectionGroup.getChildren().toArray();
+      const selectionGroupParent = selectionGroup.getParent();
+      children.forEach(node => selectionGroupParent.add(node));
+      selectionGroup.destroy();
+    }
     stage.find('Transformer').each((child: Konva.Node) => {
       const transformer = child as Konva.Transformer;
       transformer.getNode().draggable(false);
       transformer.destroy();
     });
-    layers.main.draw();
+    layers.main.batchDraw();
   }
 
   public static stageDragBoundFunc(pos: Konva.Vector2d, stage: Konva.Stage): Konva.Vector2d {

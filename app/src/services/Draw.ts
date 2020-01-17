@@ -3,6 +3,7 @@ import LayerList from '../types/LayerList';
 import TransformService from './Transform';
 import CurrentForce from '../types/CurrentForce';
 import OffsetPointsService from './OffsetPoints';
+import PolygonService from './Polygon';
 
 export default class DrawService {
   public static startDrawing(stage: Konva.Stage, layers: LayerList, strokeColor: string): Konva.Line {
@@ -137,7 +138,40 @@ export default class DrawService {
     return currentLine;
   }
 
-  public static stopSelecting(currentLine: Konva.Line, stage: Konva.Stage): void {
+  public static stopSelecting(currentLine: Konva.Line, stage: Konva.Stage, layers: LayerList): void {
+    const linePoints = currentLine.points();
+    const selectionGroup = new Konva.Group({ id: 'selectionGroup' });
+
+    layers.main
+      .getChildren(node => node.hasName('writing'))
+      .each(node => {
+        if (node instanceof Konva.Line) {
+          const nodeLinePoints = node.points();
+          let inSelection = false;
+          for (let i = 0; i < nodeLinePoints.length; i += 10) {
+            inSelection =
+              PolygonService.pointInPolygon({ x: nodeLinePoints[i], y: nodeLinePoints[i + 1] }, linePoints) ||
+              inSelection;
+          }
+          inSelection =
+            PolygonService.pointInPolygon(
+              { x: nodeLinePoints[nodeLinePoints.length - 2], y: nodeLinePoints[nodeLinePoints.length - 1] },
+              linePoints,
+            ) || inSelection;
+
+          if (inSelection) {
+            selectionGroup.add(node);
+          }
+        }
+      });
+
+    if (selectionGroup.hasChildren()) {
+      layers.main.add(selectionGroup);
+      TransformService.startTransform(selectionGroup, stage, layers);
+    }
+
+    currentLine.destroy();
+    layers.selecting.batchDraw();
     stage.draggable(true);
   }
 
