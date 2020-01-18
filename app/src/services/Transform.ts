@@ -4,9 +4,8 @@ import PointerService from './Pointer';
 
 export default class TransformService {
   public static startTransform(target: Konva.Node | Konva.Stage, stage: Konva.Stage, layers: LayerList): void {
-    if (!target.hasName('userContent') && target.id() !== 'selectionGroup') {
-      return;
-    }
+    if (!target.hasName('userContent') && target.id() !== 'selectionGroup') return;
+    if (target.getParent().id() === 'selectionGroup') return;
 
     (stage.find('Transformer') as any).destroy();
     target.draggable(true);
@@ -25,7 +24,10 @@ export default class TransformService {
     if (selectionGroup) {
       const children = selectionGroup.getChildren().toArray();
       const selectionGroupParent = selectionGroup.getParent();
-      children.forEach(node => selectionGroupParent.add(node));
+      children.forEach((node: Konva.Node) => {
+        node.listening(false);
+        selectionGroupParent.add(node);
+      });
       selectionGroup.destroy();
     }
     stage.find('Transformer').each((child: Konva.Node) => {
@@ -96,5 +98,9 @@ export default class TransformService {
         if (!stage) return;
         node.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
       });
+  }
+
+  public static isPinchToZoomRunning(): boolean {
+    return !!TransformService.lastPinchZoomPoint;
   }
 }

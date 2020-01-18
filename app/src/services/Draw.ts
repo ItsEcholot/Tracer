@@ -14,7 +14,6 @@ export default class DrawService {
       points: [],
       lineCap: 'round',
       lineJoin: 'round',
-      // tension: 0.4,
       closed: true,
       name: 'userContent writing',
       listening: false,
@@ -140,7 +139,10 @@ export default class DrawService {
 
   public static stopSelecting(currentLine: Konva.Line, stage: Konva.Stage, layers: LayerList): void {
     const linePoints = currentLine.points();
-    const selectionGroup = new Konva.Group({ id: 'selectionGroup' });
+    const selectionGroup = new Konva.Group({
+      id: 'selectionGroup',
+      draggable: true,
+    });
 
     layers.main
       .getChildren(node => node.hasName('writing'))
@@ -160,6 +162,7 @@ export default class DrawService {
             ) || inSelection;
 
           if (inSelection) {
+            node.listening(true);
             selectionGroup.add(node);
           }
         }

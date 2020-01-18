@@ -86,8 +86,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
   private onTouchEnd(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
     event.evt.preventDefault();
     if (!this.stage) return;
-    if (!this.drawing) {
-      // TODO: Bad code
+    if (!this.drawing && TransformService.isPinchToZoomRunning()) {
       TransformService.pinchToZoomEnd(this.stage, this.layers);
       DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
       this.layers.main.batchDraw();
