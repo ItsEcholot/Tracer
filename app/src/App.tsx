@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
 import ReactResizeDetector from 'react-resize-detector';
-import Konva from 'konva';
 import KonvaCanvas from './components/KonvaCanvas';
 import styles from './App.module.css';
 import Toolbar from './components/Toolbar';
@@ -19,8 +18,6 @@ interface AppState {
 class App extends React.PureComponent<{}, AppState> {
   constructor(props: {}) {
     super(props);
-    // eslint-disable-next-line no-underscore-dangle
-    // (Konva as any)._pointerEventsEnabled = true;
     this.state = {
       toolMode: ToolModes.Draw,
     };

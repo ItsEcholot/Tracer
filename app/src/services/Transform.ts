@@ -1,6 +1,4 @@
 import Konva from 'konva';
-import LayerList from '../types/LayerList';
-import PointerService from './Pointer';
 
 export default class TransformService {
   public static startTransform(target: Konva.Node | Konva.Stage, stage: Konva.Stage): void {

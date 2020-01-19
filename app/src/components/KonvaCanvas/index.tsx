@@ -1,16 +1,15 @@
 import React, { ReactNode } from 'react';
 import Konva from 'konva';
 import LayerList from '../../types/LayerList';
-import ClientCapabilities from '../../types/ClientCapabilities';
 import TransformService from '../../services/Transform';
 import DrawService from '../../services/Draw';
 import ClientCapabilitiesService from '../../services/ClientCapabilities';
 import ToolModes from '../../types/ToolModes';
-
-import styles from './styles.module.css';
 import EventHandler from './eventHandlers/EventHandler';
 import PenEventHandler from './eventHandlers/PenEventHandler';
 import TouchEventHandler from './eventHandlers/TouchEventHandler';
+
+import styles from './styles.module.css';
 
 interface KonvaCanvasProps {
   width: number;
@@ -22,11 +21,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, {}> {
   private containerRef = React.createRef<HTMLDivElement>();
   private stage: Konva.Stage | undefined;
   private layers: LayerList = {};
-  private clientCapabilities: ClientCapabilities = {
-    force: false,
-    pen: false,
-  };
-
   private eventHandler: EventHandler | undefined;
 
   public componentDidMount(): void {
@@ -134,8 +128,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, {}> {
       });
 
       document.addEventListener('stylusplugin-down', event => {
-        this.clientCapabilities.pen = true;
-        this.clientCapabilities.force = true;
         if (this.stage) {
           this.stage.setPointersPositions(event);
         }
@@ -153,26 +145,6 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, {}> {
         }
         this.onTouchEnd({ evt: event } as Konva.KonvaEventObject<PointerEvent>);
       });
-
-      const circle = new Konva.Circle({
-        x: 350,
-        y: 250,
-        radius: 100,
-        fill: 'black',
-        name: 'userContent shape',
-      });
-      const circle2 = new Konva.Circle({
-        x: 100,
-        y: 250,
-        radius: 100,
-        fill: 'black',
-        name: 'userContent shape',
-      });
-      this.layers.main.add(circle);
-      this.layers.main.add(circle2);
-      circle.draw();
-      circle2.draw();
-      circle.cache({ pixelRatio: window.devicePixelRatio * this.stage.scaleX(), offset: 1 });
     }
   }
 
