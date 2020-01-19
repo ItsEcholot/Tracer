@@ -1,8 +1,8 @@
 import Konva from 'konva';
 import PenHandler from './PenHandler';
-import PointerService from '../../../../services/Pointer';
-import PolygonService from '../../../../services/Polygon';
-import TransformService from '../../../../services/Transform';
+import PointerService from '../../services/Pointer';
+import PolygonService from '../../services/Polygon';
+import TransformService from '../../services/Transform';
 
 export default class SelectPenHandler implements PenHandler {
   private currentLine: Konva.Line | undefined;

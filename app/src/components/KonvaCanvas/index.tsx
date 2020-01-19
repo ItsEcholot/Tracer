@@ -5,9 +5,9 @@ import TransformService from '../../services/Transform';
 import DrawService from '../../services/Draw';
 import ClientCapabilitiesService from '../../services/ClientCapabilities';
 import ToolModes from '../../types/ToolModes';
-import EventHandler from './eventHandlers/EventHandler';
-import PenEventHandler from './eventHandlers/PenEventHandler';
-import TouchEventHandler from './eventHandlers/TouchEventHandler';
+import EventHandler from '../../eventHandlers/EventHandler';
+import PenEventHandler from '../../eventHandlers/PenEventHandler';
+import TouchEventHandler from '../../eventHandlers/TouchEventHandler';
 
 import styles from './styles.module.css';
 

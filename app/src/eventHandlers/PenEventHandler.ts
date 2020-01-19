@@ -1,10 +1,10 @@
 import Konva from 'konva';
 import EventHandler from './EventHandler';
-import ToolModes from '../../../types/ToolModes';
+import ToolModes from '../types/ToolModes';
 import PenHandler from './penHandlers/PenHandler';
 import DrawPenHandler from './penHandlers/DrawPenHandler';
 import SelectPenHandler from './penHandlers/SelectPenHandler';
-import TransformService from '../../../services/Transform';
+import TransformService from '../services/Transform';
 
 export default class PenEventHandler implements EventHandler {
   private penHandler: PenHandler | undefined;

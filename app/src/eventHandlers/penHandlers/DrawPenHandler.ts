@@ -1,9 +1,9 @@
 import Konva from 'konva';
 import PenHandler from './PenHandler';
-import PointerService from '../../../../services/Pointer';
-import ClientCapabilitiesService from '../../../../services/ClientCapabilities';
-import CurrentForce from '../../../../types/CurrentForce';
-import OffsetPointsService from '../../../../services/OffsetPoints';
+import PointerService from '../../services/Pointer';
+import ClientCapabilitiesService from '../../services/ClientCapabilities';
+import CurrentForce from '../../types/CurrentForce';
+import OffsetPointsService from '../../services/OffsetPoints';
 
 export default class DrawPenHandler implements PenHandler {
   private currentForces: CurrentForce[] = [];

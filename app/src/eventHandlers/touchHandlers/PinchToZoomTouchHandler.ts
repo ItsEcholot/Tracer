@@ -1,8 +1,8 @@
 import Konva from 'konva';
 import TouchHandler from './TouchHandler';
-import PointerService from '../../../../services/Pointer';
-import TransformService from '../../../../services/Transform';
-import DrawService from '../../../../services/Draw';
+import PointerService from '../../services/Pointer';
+import TransformService from '../../services/Transform';
+import DrawService from '../../services/Draw';
 
 export default class PinchToZoomTouchHandler implements TouchHandler {
   private lastPinchZoomDist = 0;

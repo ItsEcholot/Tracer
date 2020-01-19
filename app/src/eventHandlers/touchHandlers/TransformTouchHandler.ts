@@ -1,6 +1,6 @@
 import Konva from 'konva';
 import TouchHandler from './TouchHandler';
-import TransformService from '../../../../services/Transform';
+import TransformService from '../../services/Transform';
 
 export default class TransformTouchHandler implements TouchHandler {
   public start(stage: Konva.Stage, event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {

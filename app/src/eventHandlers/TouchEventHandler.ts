@@ -1,6 +1,6 @@
 import Konva from 'konva';
 import EventHandler from './EventHandler';
-import ToolModes from '../../../types/ToolModes';
+import ToolModes from '../types/ToolModes';
 import TouchHandler from './touchHandlers/TouchHandler';
 import TransformTouchHandler from './touchHandlers/TransformTouchHandler';
 import PinchToZoomTouchHandler from './touchHandlers/PinchToZoomTouchHandler';
