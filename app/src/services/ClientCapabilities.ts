@@ -1,11 +1,11 @@
 import ClientCapabilities from '../types/ClientCapabilities';
 
 export default class ClientCapabilitiesService {
-  public static updateClientCapabilities(
-    event: MouseEvent | TouchEvent | PointerEvent,
-    previousClientCapabilities: ClientCapabilities,
-  ): ClientCapabilities {
-    const clientCapabilities = { ...previousClientCapabilities };
+  public static getClientCapabilities(event: MouseEvent | TouchEvent | PointerEvent): ClientCapabilities {
+    const clientCapabilities: ClientCapabilities = {
+      force: false,
+      pen: false,
+    };
 
     if (window.TouchEvent && event instanceof TouchEvent) {
       if (event.targetTouches[0].force) {

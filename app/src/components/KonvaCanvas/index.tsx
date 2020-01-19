@@ -4,12 +4,13 @@ import LayerList from '../../types/LayerList';
 import ClientCapabilities from '../../types/ClientCapabilities';
 import TransformService from '../../services/Transform';
 import DrawService from '../../services/Draw';
-import PointerService from '../../services/Pointer';
-import CurrentForce from '../../types/CurrentForce';
 import ClientCapabilitiesService from '../../services/ClientCapabilities';
 import ToolModes from '../../types/ToolModes';
 
 import styles from './styles.module.css';
+import EventHandler from './eventHandlers/EventHandler';
+import PenEventHandler from './eventHandlers/PenEventHandler';
+import TouchEventHandler from './eventHandlers/TouchEventHandler';
 
 interface KonvaCanvasProps {
   width: number;
@@ -17,12 +18,7 @@ interface KonvaCanvasProps {
   toolMode: ToolModes;
 }
 
-interface KonvaCanvasState {
-  strokeColor: string;
-  strokeWidth: number;
-}
-
-class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState> {
+class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, {}> {
   private containerRef = React.createRef<HTMLDivElement>();
   private stage: Konva.Stage | undefined;
   private layers: LayerList = {};
@@ -30,18 +26,8 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     force: false,
     pen: false,
   };
-  private drawing = false;
-  private currentLine: Konva.Line | undefined;
-  private disabledListeningShape: Konva.Shape | Konva.Stage | undefined;
-  private currentForces: CurrentForce[] = [];
 
-  constructor(props: KonvaCanvasProps) {
-    super(props);
-    this.state = {
-      strokeColor: '#000000',
-      strokeWidth: 4,
-    };
-  }
+  private eventHandler: EventHandler | undefined;
 
   public componentDidMount(): void {
     this.setupKonva();
@@ -55,107 +41,31 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
     }
   }
 
-  private onTouchStart(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
-    event.evt.preventDefault();
+  private onTouchStart(event: Konva.KonvaEventObject<PointerEvent>): void {
     if (!this.stage) return;
-    if (this.clientCapabilities.pen) {
-      if (event.target && event.target.hasName('shape')) {
-        this.disabledListeningShape = event.target;
-        this.disabledListeningShape.listening(false);
-      }
-      this.drawing = true;
-
-      if (this.props.toolMode === ToolModes.Draw) {
-        const pointerPos = PointerService.getStagePointerPosition(this.stage);
-        if (this.clientCapabilities.force && (event.evt as TouchEvent).targetTouches) {
-          this.currentForces = [{ pos: pointerPos, force: (event.evt as TouchEvent).targetTouches[0].force }];
-        }
-        this.currentLine = DrawService.startDrawing(this.stage, this.layers, this.state.strokeColor);
-        this.layers.main.add(this.currentLine);
-      } else if (this.props.toolMode === ToolModes.Select) {
-        this.currentLine = DrawService.startSelecting(this.stage, this.layers);
-        this.layers.selecting.add(this.currentLine);
-      }
-    } else if (event.target === this.stage) {
-      TransformService.stopTransform(this.stage, this.layers);
-    } else {
-      TransformService.startTransform(event.target, this.stage, this.layers);
+    const clientCapabilities = ClientCapabilitiesService.getClientCapabilities(event.evt);
+    if (clientCapabilities.pen && !(this.eventHandler instanceof PenEventHandler)) {
+      this.eventHandler = new PenEventHandler();
+    } else if (!(this.eventHandler instanceof TouchEventHandler)) {
+      this.eventHandler = new TouchEventHandler();
     }
+
+    this.eventHandler.start(this.stage, event, this.props.toolMode);
   }
 
-  private onTouchEnd(event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
-    event.evt.preventDefault();
-    if (!this.stage) return;
-    if (!this.drawing && TransformService.isPinchToZoomRunning()) {
-      TransformService.pinchToZoomEnd(this.stage, this.layers);
-      DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
-      this.layers.main.batchDraw();
-    }
-
-    if (this.clientCapabilities.pen) {
-      if (!this.currentLine || !this.drawing) return;
-      if (this.disabledListeningShape) {
-        this.disabledListeningShape.listening(true);
-        this.disabledListeningShape = undefined;
-      }
-      this.drawing = false;
-
-      if (this.props.toolMode === ToolModes.Draw) {
-        DrawService.stopDrawing(this.currentLine, this.stage);
-        this.currentForces = [];
-        this.layers.main.batchDraw();
-      } else if (this.props.toolMode === ToolModes.Select) {
-        DrawService.stopSelecting(this.currentLine, this.stage, this.layers);
-        this.layers.selecting.batchDraw();
-      }
-    }
-  }
-
-  private onTouchMove(event: Konva.KonvaEventObject<TouchEvent | PointerEvent>): void {
+  private onTouchMove(event: Konva.KonvaEventObject<PointerEvent | TouchEvent>): void {
     event.evt.preventDefault(); // Chrome on desktop would maybe otherwise think that we start a gesture
     if (!this.stage) return;
-    if (
-      !this.drawing &&
-      !this.clientCapabilities.pen &&
-      (event.evt as TouchEvent).targetTouches &&
-      (event.evt as TouchEvent).targetTouches.length === 2
-    ) {
-      // Pinch to zoom
-      const touch1 = (event.evt as TouchEvent).targetTouches[0];
-      const touch2 = (event.evt as TouchEvent).targetTouches[1];
-      if (touch1 && touch2) {
-        event.evt.stopPropagation();
-        TransformService.pinchToZoom(this.stage, touch1, touch2);
-      }
-    }
-    if (!this.drawing || !this.currentLine) return;
-    if (!this.clientCapabilities.pen) return;
 
-    const pointerPos = PointerService.getStagePointerPosition(this.stage);
-    if (this.props.toolMode === ToolModes.Draw) {
-      // Draw
-      if (
-        this.currentForces.length > 0 &&
-        pointerPos.x === this.currentForces[this.currentForces.length - 1].pos.x &&
-        pointerPos.y === this.currentForces[this.currentForces.length - 1].pos.y
-      )
-        return;
+    if (this.eventHandler) this.eventHandler.draw(this.stage, event, this.props.toolMode);
+  }
 
-      if (!this.clientCapabilities.force) {
-        this.currentForces.push({ pos: pointerPos, force: 1 });
-      } else if ((event.evt as TouchEvent).targetTouches) {
-        this.currentForces.push({
-          pos: pointerPos,
-          force: Math.max((event.evt as TouchEvent).targetTouches[0].force, 0.1),
-        });
-      } else if ((event.evt as PointerEvent).pressure) {
-        this.currentForces.push({ pos: pointerPos, force: Math.max((event.evt as PointerEvent).pressure, 0.1) });
-      }
-      DrawService.draw(this.currentLine, this.currentForces, this.state.strokeWidth);
-    } else if (this.props.toolMode === ToolModes.Select) {
-      // Select
-      DrawService.select(this.currentLine, this.layers.selecting, pointerPos);
-    }
+  private onTouchEnd(event: Konva.KonvaEventObject<PointerEvent>): void {
+    event.evt.preventDefault();
+    if (!this.stage) return;
+
+    if (this.eventHandler) this.eventHandler.stop(this.stage, event, this.props.toolMode);
+    this.eventHandler = undefined;
   }
 
   private setupKonva(): void {
@@ -170,50 +80,78 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, KonvaCanvasState
 
       this.layers.bgGrid = new Konva.Layer({
         hitGraphEnabled: false,
+        id: 'layer-bgGrid',
       });
-      this.layers.main = new Konva.Layer();
+      this.layers.main = new Konva.Layer({ id: 'layer-main' });
       this.layers.selecting = new Konva.Layer({
         hitGraphEnabled: false,
+        id: 'layer-selecting',
       });
       this.stage.add(this.layers.bgGrid);
       this.stage.add(this.layers.main);
       this.stage.add(this.layers.selecting);
 
-      this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
-      this.stage.on('mouseup touchend touchcancel', this.onTouchEnd.bind(this));
-      this.stage.on('touchmove', this.onTouchMove.bind(this));
+      this.stage.on('dragend', () => {
+        if (!this.stage) return;
+        DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
+      });
+      this.stage.on('pointerdown', this.onTouchStart.bind(this)); // this.stage.on('mousedown touchstart', this.onTouchStart.bind(this));
+      this.stage.on('pointerup', this.onTouchEnd.bind(this)); // this.stage.on('mouseup touchend touchcancel', this.onTouchEnd.bind(this));
+      this.stage.on('pointermove touchmove', this.onTouchMove.bind(this));
       this.containerRef.current.addEventListener('pointerdown', event => {
-        this.clientCapabilities = ClientCapabilitiesService.updateClientCapabilities(event, this.clientCapabilities);
+        if (this.stage) {
+          this.stage.setPointersPositions(event);
+          const intersection = this.stage.getIntersection(this.stage.getPointerPosition()) || this.stage;
+          // eslint-disable-next-line no-underscore-dangle
+          intersection._fireAndBubble('pointerdown', {
+            evt: event,
+            pointerId: event.pointerId,
+            target: intersection,
+          });
+        }
+      });
+      this.containerRef.current.addEventListener('pointerup', event => {
+        if (this.stage) {
+          this.stage.setPointersPositions(event);
+          const intersection = this.stage.getIntersection(this.stage.getPointerPosition()) || this.stage;
+          // eslint-disable-next-line no-underscore-dangle
+          intersection._fireAndBubble('pointerup', {
+            evt: event,
+            pointerId: event.pointerId,
+            target: intersection,
+          });
+        }
       });
       this.containerRef.current.addEventListener('pointermove', event => {
         if (this.stage) {
           this.stage.setPointersPositions(event);
+          // eslint-disable-next-line no-underscore-dangle
+          this.stage._fireAndBubble('pointermove', {
+            evt: event,
+            pointerId: event.pointerId,
+          });
         }
-        this.onTouchMove({ evt: event } as Konva.KonvaEventObject<PointerEvent>);
       });
+
       document.addEventListener('stylusplugin-down', event => {
         this.clientCapabilities.pen = true;
         this.clientCapabilities.force = true;
         if (this.stage) {
           this.stage.setPointersPositions(event);
         }
-        this.onTouchStart({ evt: event } as Konva.KonvaEventObject<TouchEvent>);
+        this.onTouchStart({ evt: event } as Konva.KonvaEventObject<PointerEvent>);
       });
       document.addEventListener('stylusplugin-move', event => {
         if (this.stage) {
           this.stage.setPointersPositions(event);
         }
-        this.onTouchMove({ evt: event } as Konva.KonvaEventObject<TouchEvent>);
+        this.onTouchMove({ evt: event } as Konva.KonvaEventObject<PointerEvent>);
       });
       document.addEventListener('stylusplugin-up', event => {
         if (this.stage) {
           this.stage.setPointersPositions(event);
         }
-        this.onTouchEnd({ evt: event } as Konva.KonvaEventObject<TouchEvent>);
-      });
-      this.stage.on('dragend', () => {
-        if (!this.stage) return;
-        DrawService.drawBGGrid(this.stage, this.layers.bgGrid);
+        this.onTouchEnd({ evt: event } as Konva.KonvaEventObject<PointerEvent>);
       });
 
       const circle = new Konva.Circle({
