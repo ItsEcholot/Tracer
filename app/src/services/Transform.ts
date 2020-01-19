@@ -17,8 +17,9 @@ export default class TransformService {
   }
 
   public static stopTransform(stage: Konva.Stage): void {
-    const selectionGroup = stage.findOne('#selectionGroup');
+    const selectionGroup: Konva.Group = stage.findOne('#selectionGroup');
     if (selectionGroup) {
+      selectionGroup.findOne('.hitRect').destroy();
       const children = selectionGroup.getChildren().toArray();
       const selectionGroupParent = selectionGroup.getParent();
       children.forEach((node: Konva.Node) => {

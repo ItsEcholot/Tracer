@@ -29,6 +29,13 @@ export default class DrawPenHandler implements PenHandler {
       draggable: false,
       hitStrokeWidth: 0,
       perfectDrawEnabled: false,
+      hitFunc: (context, shape): void => {
+        const selfRect = shape.getSelfRect();
+        context.beginPath();
+        context.rect(selfRect.x, selfRect.y, shape.width(), shape.height());
+        context.closePath();
+        context.fillStrokeShape(shape);
+      },
     });
     this.currentLine.shadowForStrokeEnabled(false);
 
@@ -91,7 +98,7 @@ export default class DrawPenHandler implements PenHandler {
     this.currentLine.draw();
   }
 
-  public stop(stage: Konva.Stage, event: Konva.KonvaEventObject<TouchEvent | MouseEvent>): void {
+  public stop(stage: Konva.Stage): void {
     if (this.currentLine) {
       this.currentLine.tension(0.4);
       this.currentLine.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
