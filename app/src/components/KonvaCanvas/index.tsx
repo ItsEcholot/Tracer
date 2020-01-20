@@ -154,6 +154,7 @@ class KonvaCanvas extends React.PureComponent<KonvaCanvasProps, {}> {
       name: 'userContent shape',
     });
     this.layers.main.add(circle);
+    // this.layers.main.toggleHitCanvas();
     this.layers.main.batchDraw();
   }
 

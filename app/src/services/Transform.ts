@@ -19,11 +19,29 @@ export default class TransformService {
   public static stopTransform(stage: Konva.Stage): void {
     const selectionGroup: Konva.Group = stage.findOne('#selectionGroup');
     if (selectionGroup) {
+      const offsetX = selectionGroup.x();
+      const offsetY = selectionGroup.y();
+      const scaleX = selectionGroup.scaleX();
+      const scaleY = selectionGroup.scaleY();
+
       selectionGroup.findOne('.hitRect').destroy();
       const children = selectionGroup.getChildren().toArray();
       const selectionGroupParent = selectionGroup.getParent();
       children.forEach((node: Konva.Node) => {
-        node.listening(false);
+        if (node instanceof Konva.Line) {
+          const newPoints = node.points().map((value, index) => {
+            if (index % 2 === 0) {
+              let x = value * scaleX; // scale x
+              x += offsetX; // translate x
+              return x;
+            }
+            let y = value * scaleY; // scale y
+            y += offsetY; // translate y
+            return y;
+          });
+          node.points(newPoints);
+          node.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
+        }
         selectionGroupParent.add(node);
       });
       selectionGroup.destroy();
