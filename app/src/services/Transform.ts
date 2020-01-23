@@ -6,6 +6,7 @@ export default class TransformService {
     target.draggable(true);
     const transformer = new Konva.Transformer({
       rotationSnaps: [0, 45, 90, 135, 180, 225, 270],
+      rotateEnabled: false,
       padding: 10,
       anchorSize: 20,
     });
@@ -19,6 +20,8 @@ export default class TransformService {
   public static stopTransform(stage: Konva.Stage): void {
     const selectionGroup: Konva.Group = stage.findOne('#selectionGroup');
     if (selectionGroup) {
+      // const clientRect = selectionGroup.getClientRect({});
+      // const rotation = selectionGroup.rotation();
       const offsetX = selectionGroup.x();
       const offsetY = selectionGroup.y();
       const scaleX = selectionGroup.scaleX();
@@ -29,17 +32,33 @@ export default class TransformService {
       const selectionGroupParent = selectionGroup.getParent();
       children.forEach((node: Konva.Node) => {
         if (node instanceof Konva.Line) {
-          const newPoints = node.points().map((value, index) => {
-            if (index % 2 === 0) {
-              let x = value * scaleX; // scale x
-              x += offsetX; // translate x
-              return x;
-            }
-            let y = value * scaleY; // scale y
-            y += offsetY; // translate y
-            return y;
-          });
+          const points = node.points();
+          const newPoints = [];
+          for (let i = 0; i < points.length; i += 2) {
+            const point: Konva.Vector2d = { x: points[i], y: points[i + 1] };
+            const scaledPoint: Konva.Vector2d = { x: point.x * scaleX, y: point.y * scaleY };
+            const translatedPoint: Konva.Vector2d = {
+              x: scaledPoint.x + offsetX,
+              y: scaledPoint.y + offsetY,
+            };
+            newPoints.push(translatedPoint.x, translatedPoint.y);
+          }
           node.points(newPoints);
+
+          /* const clientRect = selectionGroup.getClientRect({});
+          const rotationCentre: Konva.Vector2d = {
+            x: clientRect.x + clientRect.width / 2,
+            y: clientRect.y + clientRect.height / 2,
+          };
+          points = node.points();
+          newPoints = [];
+          for (let i = 0; i < points.length; i += 2) {
+            const point: Konva.Vector2d = { x: points[i], y: points[i + 1] };
+            const rotatedPoint = TransformService.rotatePoint(point, rotationCentre, rotation);
+            newPoints.push(rotatedPoint.x, rotatedPoint.y);
+          }
+          node.points(newPoints); */
+
           node.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
         }
         selectionGroupParent.add(node);
@@ -66,5 +85,19 @@ export default class TransformService {
     stage.width(width);
     stage.height(height);
     stage.batchDraw();
+  }
+
+  public static rotatePoint(
+    pointToRotate: Konva.Vector2d,
+    centerPoint: Konva.Vector2d,
+    angleInDegrees: number,
+  ): Konva.Vector2d {
+    const angleInRadians = angleInDegrees * (Math.PI / 180);
+    const cosTheta = Math.cos(angleInRadians);
+    const sinTheta = Math.sin(angleInRadians);
+    return {
+      x: cosTheta * (pointToRotate.x - centerPoint.x) - sinTheta * (pointToRotate.y - centerPoint.y) + centerPoint.x,
+      y: sinTheta * (pointToRotate.x - centerPoint.x) + cosTheta * (pointToRotate.y - centerPoint.y) + centerPoint.y,
+    };
   }
 }
