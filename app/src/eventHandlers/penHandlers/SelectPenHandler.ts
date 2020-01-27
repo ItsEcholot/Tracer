@@ -52,8 +52,8 @@ export default class SelectPenHandler implements PenHandler {
       });
       let groupX = Number.MAX_SAFE_INTEGER;
       let groupY = Number.MAX_SAFE_INTEGER;
-      let groupWidth = 0;
-      let groupHeight = 0;
+      let topRight = 0;
+      let bottomLeft = 0;
 
       const mainLayer: Konva.Layer = stage.findOne('#layer-main');
       mainLayer
@@ -75,10 +75,10 @@ export default class SelectPenHandler implements PenHandler {
 
             if (inSelection) {
               const nodeSelfRect = node.getSelfRect();
-              groupX = Math.min(nodeSelfRect.x, groupX);
-              groupY = Math.min(nodeSelfRect.y, groupY);
-              groupWidth = Math.max(nodeSelfRect.x + nodeSelfRect.width) - groupX;
-              groupHeight = Math.max(nodeSelfRect.y + nodeSelfRect.height) - groupY;
+              groupX = Math.min(groupX, nodeSelfRect.x);
+              groupY = Math.min(groupY, nodeSelfRect.y);
+              topRight = Math.max(topRight, nodeSelfRect.x + nodeSelfRect.width);
+              bottomLeft = Math.max(bottomLeft, nodeSelfRect.y + nodeSelfRect.height);
 
               selectionGroup.add(node);
             }
@@ -86,20 +86,7 @@ export default class SelectPenHandler implements PenHandler {
         });
 
       if (selectionGroup.hasChildren()) {
-        const hitRect = new Konva.Rect({
-          x: groupX,
-          y: groupY,
-          width: groupWidth,
-          height: groupHeight,
-          name: 'hitRect',
-          hitFunc: (context, shape): void => {
-            context.beginPath();
-            context.rect(0, 0, shape.width(), shape.height());
-            context.closePath();
-            context.fillStrokeShape(shape);
-          },
-        });
-        selectionGroup.add(hitRect);
+        TransformService.createHitRectInGroup(selectionGroup);
         mainLayer.add(selectionGroup);
         TransformService.startTransform(selectionGroup, stage);
       }
