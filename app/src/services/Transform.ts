@@ -67,7 +67,6 @@ export default class TransformService {
 
   public static stopTransform(stage: Konva.Stage): void {
     if (this.onPointerUp) stage.off('pointerup', this.onPointerUp);
-    console.dir(stage.eventListeners);
     const selectionGroup: Konva.Group = stage.findOne('#selectionGroup');
     if (selectionGroup) {
       selectionGroup.off('rotationChange');
@@ -82,8 +81,8 @@ export default class TransformService {
       });
       selectionGroup.destroy();
     }
-    stage.find('Transformer').each((child: Konva.Node) => {
-      const transformer = child as Konva.Transformer;
+    stage.find('Transformer').each((node: Konva.Node) => {
+      const transformer = node as Konva.Transformer;
       transformer.getNode().draggable(false);
       transformer.destroy();
     });
@@ -133,8 +132,7 @@ export default class TransformService {
           newPoints.push(translatedPoint.x, translatedPoint.y);
         }
         node.points(newPoints);
-        node.clearCache();
-        // node.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
+        node.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
       }
     });
 

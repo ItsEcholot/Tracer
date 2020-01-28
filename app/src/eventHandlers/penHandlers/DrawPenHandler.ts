@@ -4,6 +4,7 @@ import PointerService from '../../services/Pointer';
 import ClientCapabilitiesService from '../../services/ClientCapabilities';
 import CurrentForce from '../../types/CurrentForce';
 import OffsetPointsService from '../../services/OffsetPoints';
+import ResourceGroupService from '../../services/ResourceGroup';
 
 export default class DrawPenHandler implements PenHandler {
   private currentForces: CurrentForce[] = [];
@@ -102,6 +103,14 @@ export default class DrawPenHandler implements PenHandler {
     if (this.currentLine) {
       this.currentLine.tension(0.4);
       this.currentLine.cache({ pixelRatio: window.devicePixelRatio * stage.scaleX(), offset: 1 });
+
+      const parent = this.currentLine.getParent();
+      const resourceGroup = new Konva.Group({
+        id: ResourceGroupService.getTopLeftResourceGroupId(this.currentLine),
+        listening: false,
+      });
+      resourceGroup.add(this.currentLine);
+      parent.add(resourceGroup);
     }
     stage.draggable(true);
     this.currentForces = [];
