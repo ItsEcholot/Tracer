@@ -50,10 +50,6 @@ export default class SelectPenHandler implements PenHandler {
         id: 'selectionGroup',
         draggable: true,
       });
-      let groupX = Number.MAX_SAFE_INTEGER;
-      let groupY = Number.MAX_SAFE_INTEGER;
-      let topRight = 0;
-      let bottomLeft = 0;
 
       const mainLayer: Konva.Layer = stage.findOne('#layer-main');
       mainLayer
@@ -71,15 +67,9 @@ export default class SelectPenHandler implements PenHandler {
               PolygonService.pointInPolygon(
                 { x: nodeLinePoints[nodeLinePoints.length - 2], y: nodeLinePoints[nodeLinePoints.length - 1] },
                 linePoints,
-              ) || inSelection;
+              ) || inSelection; // Last two points
 
             if (inSelection) {
-              const nodeSelfRect = node.getSelfRect();
-              groupX = Math.min(groupX, nodeSelfRect.x);
-              groupY = Math.min(groupY, nodeSelfRect.y);
-              topRight = Math.max(topRight, nodeSelfRect.x + nodeSelfRect.width);
-              bottomLeft = Math.max(bottomLeft, nodeSelfRect.y + nodeSelfRect.height);
-
               selectionGroup.add(node);
             }
           }
